@@ -9,18 +9,6 @@ What is new
 -----------
 Start version ready.
 
-Download
---------
-If you are in the user list of the project's [Bitbucket repository][bb], do a
-
-	hg clone https://amedhi@bitbucket.org/amedhi/classical-mc 
-
-You can also click [here][dl] to download. Otherwise send me a personal request 
-at 'amedhi@iisertvm.ac.in'.
-
-[bb]: https://bitbucket.org/amedhi/classical-mc
-[dl]: https://bitbucket.org/amedhi/classical-mc/downloads
-
 Introduction
 ------------
 
