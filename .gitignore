@@ -17,3 +17,8 @@ res_*.txt
 
 # ignore the sublime workspace file
 *.sublime-workspace
+
+# others
+*.sublime-workspace
+check/*
+expression/shunting_yeard/*
