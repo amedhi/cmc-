@@ -29,12 +29,13 @@ public:
   JobInput() {n_tasks=n_params=0; valid=false;} 
   JobInput(const std::string& inputfile); 
   ~JobInput() {} 
-  bool read_params(const std::string& inputfile);
+  bool read_inputs(const std::string& inputfile);
+  //bool read_params(const std::string& inputfile);
   bool not_valid(void) const {return !valid;};
   unsigned int task_size(void) {return n_tasks;}
   void get_task_param(const unsigned& task_id); 
-  void init_task_param(Parameters& p);
-  void set_task_param(Parameters& p, const unsigned& task_id); 
+  void init_task_parameters(Parameters& p);
+  void set_task_parameters(Parameters& p, const unsigned& task_id); 
 
 private:
   struct parameter {std::string name; value_type type; unsigned size;};
@@ -78,8 +79,8 @@ public:
   unsigned task_id(void) const { return this_task; }
   unsigned task_size(void) const { return n_tasks; }
   void show(const unsigned&) const;
-  friend void JobInput::init_task_param(Parameters& p);
-  friend void JobInput::set_task_param(Parameters& p, const unsigned& task_id);
+  friend void JobInput::init_task_parameters(Parameters& p);
+  friend void JobInput::set_task_parameters(Parameters& p, const unsigned& task_id);
 
 private:
   struct pval {bool is_const; value_type type; bool bool_val; double num_val; std::string str_val;};

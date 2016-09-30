@@ -1,15 +1,14 @@
 #include <iostream>
 #include "scheduler/scheduler.h"
-#include "mytask.h"
+#include "montecarlo/simulator.h"
 
 int main(int argc, const char *argv[])
 {
-  MyTask mytask;
   try {
-	 return scheduler::start(argc, argv, mytask);
+	 return scheduler::start(argc, argv, scheduler::Task<mc::Simulator>());
   }
-  catch (std::exception& exn) {
-    std::cout << exn.what() << std::endl;
+  catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
     return -1;
   }
   catch (...) {

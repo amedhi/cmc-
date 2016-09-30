@@ -14,52 +14,93 @@ namespace model {
 int Model::define_model(const lattice::Lattice& lattice, const input::Parameters& inputs)
 {
   //int info;
-  unsigned ntypes;
-  std::vector<MatrixElement> matrix_elem(20);
+  //unsigned ntypes;
+  //std::vector<MatrixElement> matrix_elem(20);
+  double defval;
+  unsigned sitetype, change; //, type, num_types;
+  std::string name, matrixelem, op, qn, site, src, tgt, fact;
+  SiteBasis site_basis;
+  BasisDescriptor basis;
+  QuantumNumber::value_type min, max, step;
+  CouplingConstant cc, coupling;
+  //QuantumOperator q_op0, q_op1, q_op2;
 
   // define the models 
-  model_name = inputs.set_value("model", "HUBBARD");
+  model_name = inputs.set_value("model", "ISING");
   boost::to_upper(model_name);
 
-  /*------------- 'Hubbard' model--------------*/
-  if (model_name == "HUBBARD") {
-    mid = model_id::HUBBARD;
+  if (model_name == "ISING") {
+    // site basis
+    site_basis.clear();
+    site_basis.add_qn(qn="S", min=-1, max=1, step=2);
+    site_basis.add_operator(op="S", matrixelem="S", qn="S", change=0);
+    add_sitebasis(site_basis);
+    // model parameters
+    add_parameter(name="J", defval=1.0, inputs);
+    // bond operator terms
+    add_bondterm(name="Exchange", cc="-J", op="S(i)*S(j)", src="i", tgt="j");
+  }
+
+  else if (model_name == "BEG_POTTS_NI2MNX") {
     switch (lattice.id()) {
       /*------------- 'SQUARE' lattice--------------*/
-      case lattice::lattice_id::SQUARE:
+      case lattice::lattice_id::SIMPLECUBIC:
+        //site_basis
+        site_basis.clear();
+        site_basis.add_qn(qn="S", min=-2, max=2, step=1);
+        site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+        site_basis.add_operator(op="S", matrixelem="S", qn="S");
+        site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+        add_sitebasis(site_basis, sitetype=0);
+
         // model parameters
-        set_parameter(param::t, "t", inputs);
-        set_parameter(param::U, "U", inputs);
+        add_parameter(name="T", defval=1.0, inputs);
+        add_parameter(name="kB", defval=1.0, inputs);
+        add_parameter(name="J", defval=1.0, inputs);
+        add_parameter(name="J_fm", defval=1.0, inputs);
+        add_parameter(name="J_afm", defval=1.0, inputs);
+        add_parameter(name="H", defval=0.0, inputs);
+        add_parameter(name="U", defval=0.0, inputs);
+        add_parameter(name="K", defval=0.0, inputs);
+        add_parameter(name="T_afm", defval=0.0, inputs);
 
-        // hopping operators
-        matrix_elem[0] = product(-1.0, param::t);
-        add_operator(op_id::upspin_hop, matrix_elem, ntypes=1);
-        add_operator(op_id::dnspin_hop, matrix_elem, ntypes=1);
+        // site operator term
+        // magnetic field along +z direction (S=+2) 
+        add_siteterm("H_field", cc="-H/J", op="cron(S(i),2)", site="i");
+        add_siteterm("sigma", cc="-0.693147*kB*T/J", op="1-sigma(i)*sigma(i)", site="i");
 
+        // bond operator term
+        add_bondterm("Potts", cc="-J_fm/J", op="cron(S(i),S(j))", src="i", tgt="j");
+        add_bondterm("Tetra", cc="-1.0", op="sigma(i)*sigma(j)", src="i", tgt="j");
+        add_bondterm("Cubic", cc="-K/J", op="(1-sigma(i)*sigma(i))*(1-sigma(j)*sigma(j))", src="i", tgt="j");
+        add_bondterm("Interaction", cc="U/J", 
+          op="cron(S(i),S(j))*((1-sigma(i)*sigma(i))*(1-sigma(j)*sigma(j))-0.5)", src="i", tgt="j");
         break;
       default:
         throw std::range_error("*error: modellibrary: model not defined for the given lattice");
     }
   }
 
-  /*------------- 't-J' model--------------*/
-  else if (model_name == "TJ") {
-    mid = model_id::TJ;
+  else if (model_name == "BEG") {
     switch (lattice.id()) {
       /*------------- 'SQUARE' lattice--------------*/
       case lattice::lattice_id::SQUARE:
+        //site_basis
+        site_basis.clear();
+        site_basis.add_qn(qn="Sz", min=-2, max=2, step=2);
+        site_basis.add_qn(qn="El", min=-1, max=1, step=1);
+        site_basis.add_operator(name="Sz", matrixelem="Sz", qn="Sz", change=0);
+        site_basis.add_operator(name="sigma", matrixelem="El", qn="El", change=0);
+        add_sitebasis(site_basis, sitetype=0);
         // model parameters
-        set_parameter(param::t, "t", inputs);
-        set_parameter(param::J, "J", inputs);
-
-        // hopping operators
-        matrix_elem[0] = product(-1.0, param::t);
-        matrix_elem[2] = product(-1.0, param::t);
-        add_operator(op_id::upspin_hop, matrix_elem, ntypes=2);
-        add_operator(op_id::dnspin_hop, matrix_elem, ntypes=2);
-
+        add_parameter(name="J", defval=1.0, inputs);
+        add_parameter(name="B", defval=0.0, inputs);
+        // site operator term
+        add_siteterm("MagField", cc="B", op="2*Sz(i)*sigma(i)", site="i");
+        // bond operator term
+        add_bondterm("Exchange", cc="-J", op="Sz(i)*Sz(j)", src="i", tgt="j");
         break;
-      default: 
+      default:
         throw std::range_error("*error: modellibrary: model not defined for the given lattice");
     }
   }
@@ -72,122 +113,16 @@ int Model::define_model(const lattice::Lattice& lattice, const input::Parameters
   return 0;
 }
 
-int Model::define_mf_model(const lattice::Lattice& lattice, const input::Parameters& inputs)
-{
-  // Mean-field version
-
-  //int info;
-  unsigned ntypes;
-  std::vector<MatrixElement> matrix_elem(20);
-
-  // input information
-  read_mf_order(inputs);
-
-  // first copy the 'single particle operators'
-  for (auto it=operators.begin(); it!=operators.end(); ++it) {
-    if (it->second.single_particle_op) mf_operators.insert({*it});
-  }
-
-  // next the mean-field order terms
-  // mean-field order
-  switch (mf_order) {
-    case mforder::SC:
-      set_parameter(param::delta_sc, "delta_sc", inputs);
-      switch (lattice.id()) {
-        case lattice::lattice_id::SQUARE:
-          switch (pairing_symmetry) {
-            case pairsymm::extended_s:
-              matrix_elem[0] = product(+1.0, param::delta_sc);
-              matrix_elem[1] = product(+1.0, param::delta_sc);
-              break;
-            case pairsymm::dwave:
-              matrix_elem[0] = product(+1.0, param::delta_sc);
-              matrix_elem[1] = product(-1.0, param::delta_sc);
-              break;
-            default: break;
-          }
-          add_operator(op_id::bondsinglet_hop, matrix_elem, ntypes=2);
-          break;
-        default: break;
-      }
-      break;
-    default: break;
-  }
-  return 0;
-}
-
-int Model::read_mf_order(const input::Parameters& inputs)
-{
-  int info;
-  mf_order_name = inputs.set_value("mf_order", "NONE", info);
-  boost::to_upper(mf_order_name);
-  if (mf_order_name == "NONE") {
-    mf_order_name = "FERMISEA";
-    mf_order = mforder::Fermisea;
-  }
-  else if (mf_order_name == "FERMISEA") {
-    mf_order = mforder::Fermisea;
-  }
-  else if (mf_order_name == "AF") {
-    mf_order = mforder::AF;
-  }
-  else if (mf_order_name == "FM") {
-    mf_order = mforder::FM;
-  }
-  else if (mf_order_name == "SC") {
-    mf_order = mforder::SC;
-    read_pairing_symmetry(inputs);
-  }
-  else if (mf_order_name == "TRIPLET_SC") {
-    mf_order = mforder::Triplet_SC;
-    read_pairing_symmetry(inputs);
-  }
-  else {
-    throw std::range_error("*error: modellibrary: undefined 'mf_order'");
-  }
-  return 0;
-}
-
-int Model::read_pairing_symmetry(const input::Parameters& inputs)
-{
-  int info;
-  pairing_symmetry_name = inputs.set_value("pairing_symmetry", "NONE", info);
-  boost::to_upper(pairing_symmetry_name);
-  if (pairing_symmetry_name == "SWAVE") {
-    pairing_symmetry = pairsymm::swave;
-  }
-  else if (pairing_symmetry_name == "EXTENDED_S") {
-    pairing_symmetry = pairsymm::extended_s;
-  }
-  else if (pairing_symmetry_name == "DWAVE") {
-    pairing_symmetry = pairsymm::dwave;
-  }
-  else if (pairing_symmetry_name == "D_PLUS_ID") {
-    pairing_symmetry = pairsymm::d_plus_id;
-  }
-  else if (pairing_symmetry_name == "PWAVE") {
-    pairing_symmetry = pairsymm::pwave;
-  }
-  else if (pairing_symmetry_name == "P_PLUS_IP") {
-    pairing_symmetry = pairsymm::p_plus_ip;
-  }
-  else {
-    throw std::range_error("*error: modellibrary: undefined 'pairing_symmetry'");
-  }
-  return 0;
-}
-
 int Model::construct(const lattice::Lattice& lattice, const input::Parameters& inputs)
 {
   // reset
-  parameters.clear();
-  operators.clear();
-  mf_operators.clear();
-
+  parms_.clear();
+  //operators.clear();
+  // sitetypes & bondtype maps
+  sitetypes_map_ = lattice.sitetypes_map();
+  bondtypes_map_ = lattice.bondtypes_map();
   define_model(lattice, inputs);
-  define_mf_model(lattice, inputs);
-  finalize();
-
+  finalize(lattice);
   return 0;
 }
 

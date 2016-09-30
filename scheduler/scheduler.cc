@@ -14,17 +14,15 @@
 
 namespace scheduler {
 
-int start(int argc, const char *argv[], AbstractTask& theTask)
+int start(int argc, const char *argv[], const AbstractTask& theTask)
 {
-
   Scheduler* theScheduler;
-  theScheduler = new MasterScheduler(argc, argv);
-  int res = theScheduler->run(theTask);
-
+  theScheduler = new MasterScheduler(argc, argv, theTask);
+  int res = theScheduler->run();
 	return res;	
 }
 
-int Scheduler::run(AbstractTask& theTask) 
+int Scheduler::run(void) 
 {
   // Task task;
   // valid = input.read_params(0);

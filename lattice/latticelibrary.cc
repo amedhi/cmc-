@@ -17,9 +17,9 @@ namespace lattice {
 int Lattice::define_lattice(void) 
 {
   using pos = Eigen::Vector3i;
-  using vector = Eigen::Vector3d;
+  using vec = Eigen::Vector3d;
   unsigned type, ngb, src, tgt;
-  vector a1, a2, a3, coord;
+  vec a1, a2, a3, coord;
   pos src_offset, tgt_offset;
 
   /*------------- 'SQUARE' lattice--------------*/
@@ -29,14 +29,30 @@ int Lattice::define_lattice(void)
     extent[dim3] = Extent{1, boundary_type::open, boundary_type::open};
 
     // basis vectors
-    unitcell.set_basis(a1=vector(1.0, 0.0, 0.0), a2=vector(0.0, 1.0, 0.0), a3=vector(0.0, 0.0, 0.0));
+    unitcell.set_basis(a1=vec(1,0,0), a2=vec(0,1,0), a3=vec(0,0,0));
 
     // add sites
-    unitcell.add_site(type=0, coord=vector(0.0, 0.0, 0.0));
+    unitcell.add_site(type=0, coord=vec(0,0,0));
 
     // add bonds
     unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
     unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
+  }
+
+  else if (lname == "SIMPLE CUBIC") {
+    // type
+    lid = lattice_id::SIMPLECUBIC;
+
+    // basis vectors
+    unitcell.set_basis(a1=vec(1,0,0), a2=vec(0,1,0), a3=vec(0,0,1));
+
+    // add sites
+    unitcell.add_site(type=0, coord=vec(0,0,0));
+
+    // add bonds
+    unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
+    unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
+    unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,0,1));
   }
 
   /*------------- 'CHAIN' lattice--------------*/
@@ -91,8 +107,10 @@ int Lattice::construct(const input::Parameters& parms)
 
 int Lattice::finalize_lattice(void) 
 {
-  /* Construct 'symmetrized' lattice definition */
+  // Finalize the unit cell
+  unitcell.finalize();
 
+  /* Construct 'symmetrized' lattice */
   // copy the user set dimensions
   for (unsigned dim=dim1; dim<=dim3; ++dim) copy_extent[dim] = extent[dim];
 
@@ -182,7 +200,6 @@ int Lattice::finalize_lattice(void)
   for (unsigned i=0; i<unitcell.num_bond(); ++i) {
     std::cout << unitcell.bond(i) << std::endl;
   }*/
-
 
   return 0;
 }

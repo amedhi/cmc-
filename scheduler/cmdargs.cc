@@ -18,16 +18,16 @@
 namespace scheduler {
 
 // constructor
-CmdArg::CmdArg(int argc, const char *argv[]): progname("program"), inputfile("")
+CommandArg::CommandArg(int argc, const char *argv[]): progname("program"), inputfile("")
 {
-	if (argc > 0) {
-		//boost::filesystem::path p(argv[0]);
-		//progname = p.filename().string();
+  if (argc > 0) {
+    //boost::filesystem::path p(argv[0]);
+    //progname = p.filename().string();
     progname = extract_filename(argv[0]);
     //std::cout << progname << "\n";
-		--argc; ++argv; // skip program name for the rest
-	}
-	// option stats
+    --argc; ++argv; // skip program name for the rest
+  }
+  // option stats
   option::Stats stats(usage, argc, argv);
   options = new option::Option[stats.options_max];
   buffer = new option::Option[stats.buffer_max];
@@ -36,12 +36,12 @@ CmdArg::CmdArg(int argc, const char *argv[]): progname("program"), inputfile("")
   option_count = parse.optionsCount();
   nonOption_count = parse.nonOptionsCount();
   if (nonOption_count) inputfile = parse.nonOption(0);
-  valid = process_options();
-  if (!valid) inputfile.clear();
+  valid_ = process_options();
+  if (!valid_) inputfile.clear();
 }
 
 // default desctructor
-CmdArg::CmdArg(): progname("program"), inputfile("input.parm")
+CommandArg::CommandArg(): progname("program"), inputfile("input.parm")
 {
   options = new option::Option[1];
   buffer = new option::Option[1];
@@ -49,31 +49,31 @@ CmdArg::CmdArg(): progname("program"), inputfile("input.parm")
 }
 
 // desctructor
-CmdArg::~CmdArg()
+CommandArg::~CommandArg()
 {
-	delete[] options;
-	delete[] buffer;
+  delete[] options;
+  delete[] buffer;
 }
 
 // member functions
-std::string CmdArg::extract_filename(const std::string& path) const
+std::string CommandArg::extract_filename(const std::string& path) const
 {
   return path.substr(path.find_last_of("/\\") + 1);
 }
 
-bool CmdArg::process_options(void) const
+bool CommandArg::process_options(void) const
 {
-	// handle a few of the options
-	if (options[unknown]) {
-		std::cout << "Unknown option: " << options[unknown].name << "\n\n";
-		option::printUsage(std::cout, usage);
-		return false;
-	}
+  // handle a few of the options
+  if (options[unknown]) {
+    std::cout << "Unknown option: " << options[unknown].name << "\n\n";
+    option::printUsage(std::cout, usage);
+    return false;
+  }
 
-	if (options[help]) {
-		option::printUsage(std::cout, usage);
-		return false;
-	}
+  if (options[help]) {
+    option::printUsage(std::cout, usage);
+    return false;
+  }
 
   if (options[info]) {
     std::cout << "Build info:" << std::endl;
@@ -83,7 +83,7 @@ bool CmdArg::process_options(void) const
   //option::Option* opt = options[file];
   //if (options[file]) inputfile = options[file].arg;
 
-	return true;
+  return true;
 }
 
 

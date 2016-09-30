@@ -16,22 +16,25 @@
 #include "task.h"
 #include "cmdargs.h"
 #include "inputparams.h"
+#include <chrono>
 
 namespace scheduler {
 
-int start(int argc, const char *argv[], AbstractTask& theTask);
+int start(int argc, const char *argv[], const AbstractTask& theTask);
 
 class Scheduler 
 {
 public:
   //Scheduler(): simmaster(0) {};
-  Scheduler() {};
-  ~Scheduler() {};
-  virtual int run(AbstractTask& theTask);
+  //Scheduler(Task& theTask) {}
+  Scheduler() {}
+  ~Scheduler() {}
+  virtual int run(void);
 
 protected:
+  AbstractWorker* theWorker;
   input::Parameters parms;
-  bool valid;
+  bool valid_{false};
 
 private:
   //unsigned simmaster;
@@ -41,17 +44,19 @@ private:
 class MasterScheduler : public Scheduler
 {
 public:
-  MasterScheduler(int argc, const char *argv[]);
+  MasterScheduler(int argc, const char *argv[], const AbstractTask& theTask);
+  //MasterScheduler(int argc, const char *argv[], const Task&);
   MasterScheduler() = delete;
   ~MasterScheduler() {};
-  void read_parameters(const std::string& filename);
-  void set_task_parameters(const unsigned& task);
-  int run(AbstractTask& theTask) override;
+  int run(void) override;
 
 private:
-  CmdArg cmdarg;
+  CommandArg cmdarg;
   input::JobInput input;
   unsigned int task_size;
+
+  std::string elapsed_time(const std::chrono::steady_clock::time_point& start_time,
+    const std::chrono::steady_clock::time_point& end_time) const;
 };
 
 } // end namespace input

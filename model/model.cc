@@ -7,99 +7,128 @@
 * Last Modified time: 2016-03-16 16:47:10
 *----------------------------------------------------------------------------*/
 #include "model.h"
-#include <boost/algorithm/string.hpp>
 
 namespace model {
 
-std::pair<spin, bool> Model::operator_type(const op_id& op) const
+unsigned Model::add_sitebasis(SiteBasis& sitebasis, const unsigned& type)
 {
-  spin sigma;
-  bool single_particle_op = true;
-  switch (op) {
-    case op_id::upspin_hop: sigma=spin::UP; single_particle_op=true; break;
-    case op_id::dnspin_hop: sigma=spin::DOWN; single_particle_op=true; break;
-    case op_id::ni_up: sigma=spin::UP; single_particle_op=true; break;
-    case op_id::ni_dn: sigma=spin::DOWN; single_particle_op=true; break;
-    case op_id::ni: sigma=spin::UD; single_particle_op=true; break;
-    case op_id::Hubbard: sigma=spin::UD; single_particle_op=false; break;
-    case op_id::Exchange: sigma=spin::UD; single_particle_op=false; break;
-    case op_id::bondsinglet_hop: sigma=spin::UD; single_particle_op=false; break;
-    default: throw std::range_error("*error: operator_type: unknown operator");
-  }
-  return std::pair<spin,bool>(sigma, single_particle_op);
+  auto it=sitetypes_map_.find(type);
+  if (it==sitetypes_map_.end()) 
+    throw std::range_error("Model::add_sitebasis: specified 'site type' not found");
+  unsigned mapped_type = it->second;
+  return basis_.add_sitebasis(mapped_type,sitebasis); 
 }
 
-int Model::set_parameter(const param& p, const std::string& name, const input::Parameters& inputs)
+unsigned Model::add_siteterm(const std::string& name, const CouplingConstant& cc,
+  const std::string& op_expr, const std::string& site)
 {
-  parameters[p] = inputs.set_value(name, 0.0);
-  return 0;
-}
-
-/*int Model::set_mf_parameter(const mfparam& p, const std::string& name, const input::Parameters& inputs)
-{
-  mf_parameters[p] = inputs.set_value(name, 0.0);
-  return 0;
-}*/
-
-MatrixElement Model::product(const Complex& factor, const param& p) const
-{
-  return {Complex(0.0), factor, p};
-}
-
-MatrixElement Model::product(const double& factor, const param& p) const
-{
-  return {Complex(0.0), Complex(factor), p};
-}
-
-int Model::add_operator(const op_id& op, const std::vector<MatrixElement>& MatrixElements, const unsigned& ntypes)
-{
-  if (ntypes < 1) throw std::range_error("*error: add_operator: No of matrix element types must be > 0");
-  std::vector<MatrixElement> matrix_elems(ntypes);
-  for (unsigned i=0; i<ntypes; ++i) matrix_elems[i] = MatrixElements[i];
-  spin sigma; bool single_particle_op;
-  boost::tie(sigma, single_particle_op) = operator_type(op);
-  operators.insert({op, op_value{spin::UP, matrix_elems, true}});
-  return 0;
-}
-
-void Model::finalize(void) {
-  update_matrix_elements();
-  std::tie(mf_ciup_begin, mf_ciup_end) = mf_operators.equal_range(op_id::upspin_hop);
-  std::tie(mf_cidn_begin, mf_cidn_end) = mf_operators.equal_range(op_id::dnspin_hop);
-  std::tie(mf_niup_begin, mf_niup_end) = mf_operators.equal_range(op_id::ni_up);
-  std::tie(mf_nidn_begin, mf_nidn_end) = mf_operators.equal_range(op_id::ni_dn);
-  std::tie(bsinglet_hop_begin, bsinglet_hop_end) = mf_operators.equal_range(op_id::bondsinglet_hop);
-}
-
-void Model::update_matrix_elements(void)
-{
-  /*
-  * For each operator,  matrix_element[type] = prefactor * model_parameter_value
-  */
-  for (auto it=operators.begin(); it!=operators.end(); ++it) {
-    for (unsigned i = 0; i < it->second.matrix_elem.size(); ++i) {
-      auto p = parameters.find(it->second.matrix_elem[i].pname);
-      if (p != parameters.end()) {
-        it->second.matrix_elem[i].value = it->second.matrix_elem[i].factor * p->second;
-      }
-      else {
-        throw std::logic_error("*error: modellibrary: model parameter required by operator not set");
-      }
+  // remap site type values in 'cc'
+  CouplingConstant cc_remapped = cc;
+  cc_remapped.clear_map();
+  for (auto it=cc.begin(); it!=cc.end(); ++it) {
+    unsigned sitetype = it->first;
+    auto it2=sitetypes_map_.find(sitetype);
+    if (it2!=sitetypes_map_.end()) {
+      unsigned mapped_type = it2->second;
+      cc_remapped.insert({mapped_type, it->second});
     }
+    else throw std::range_error("Model::add_siteterm: non-existent 'site type' specified");
   }
-  // update mean-field operators
-  for (auto it=mf_operators.begin(); it!=mf_operators.end(); ++it) {
-    for (unsigned i = 0; i < it->second.matrix_elem.size(); ++i) {
-      auto p = parameters.find(it->second.matrix_elem[i].pname);
-      if (p != parameters.end()) {
-        it->second.matrix_elem[i].value = it->second.matrix_elem[i].factor * p->second;
-      }
-      else {
-        throw std::logic_error("*error: modellibrary: model parameter required by operator not set");
-      }
+  unsigned num_sitetypes = sitetypes_map_.size();
+  this->std::vector<SiteTerm>::push_back(SiteTerm(name, cc_remapped, op_expr, site, num_sitetypes));
+  return this->std::vector<SiteTerm>::size();
+}
+
+unsigned Model::add_bondterm(const std::string& name, const CouplingConstant& cc,
+  const std::string& op_expr, const std::string& src, const std::string& tgt)
+{
+  // remap bond type values in 'cc'
+  CouplingConstant cc_remapped = cc;
+  cc_remapped.clear_map();
+  for (auto it=cc.begin(); it!=cc.end(); ++it) {
+    unsigned bondtype = it->first;
+    auto it2=bondtypes_map_.find(bondtype);
+    if (it2!=bondtypes_map_.end()) {
+      unsigned mapped_type = it2->second;
+      cc_remapped.insert({mapped_type, it->second});
     }
+    else throw std::range_error("Model::add_bondterm: non-existent 'site type' specified");
+  }
+  unsigned num_bondtypes = bondtypes_map_.size();
+  std::vector<BondTerm>::push_back(BondTerm(name, cc_remapped, op_expr, src, tgt, num_bondtypes));
+  return std::vector<BondTerm>::size();
+}
+
+void Model::finalize(const lattice::Lattice& L)
+{
+  // finalize the site terms
+  for (auto it=std::vector<SiteTerm>::begin(); it!=std::vector<SiteTerm>::end(); ++it) {
+    it->build_matrix(basis_); 
+    it->eval_coupling_constant(constants_, parms_); 
+  }
+  has_siteterm_ = (std::vector<SiteTerm>::size()>0);
+  st_begin_ = std::vector<SiteTerm>::cbegin();
+  st_end_ = std::vector<SiteTerm>::cend();
+  // finalize the bond terms
+  // map each 'bondtype' to its 'src' & 'tgt' types
+  BondTerm::BondSiteMap bond_site_map;
+  for (unsigned i=0; i<L.num_unitcell_bonds(); ++i) {
+    lattice::Bond b = L.unitcell_bond(i);
+    lattice::Site src = L.unitcell_site(b.src_id());
+    lattice::Site tgt = L.unitcell_site(b.tgt_id());
+    bond_site_map.insert({b.type(), std::make_pair(src.type(), tgt.type())});
+  }
+  for (auto it=std::vector<BondTerm>::begin(); it!=std::vector<BondTerm>::end(); ++it) {
+    it->build_matrix(basis_, bond_site_map); 
+    it->eval_coupling_constant(constants_, parms_); 
+  }
+  has_bondterm_ = (std::vector<BondTerm>::size()>0);
+  bt_begin_ = std::vector<BondTerm>::cbegin();
+  bt_end_ = std::vector<BondTerm>::cend();
+
+  set_info_string(L);
+}
+
+void Model::update_parameters(const input::Parameters& inputs)
+{
+  // update the parameter values
+  for (auto& p : parms_) p.second = inputs.set_value(p.first, p.second);
+  // update the model term couping constants
+  for (auto it=std::vector<SiteTerm>::begin(); it!=std::vector<SiteTerm>::end(); ++it) {
+    it->eval_coupling_constant(constants_, parms_); 
+  }
+  for (auto it=std::vector<BondTerm>::begin(); it!=std::vector<BondTerm>::end(); ++it) {
+    it->eval_coupling_constant(constants_, parms_); 
   }
 }
+
+void Model::get_term_names(std::vector<std::string>& term_names) const
+{
+  term_names.clear();
+  for (auto it=std::vector<BondTerm>::cbegin(); it!= std::vector<BondTerm>::cend(); ++it) 
+    term_names.push_back(it->name());
+  for (auto it=std::vector<SiteTerm>::cbegin(); it!= std::vector<SiteTerm>::cend(); ++it) 
+    term_names.push_back(it->name());
+}
+
+void Model::set_info_string(const lattice::Lattice& L) 
+{
+  info_str_.clear();
+  info_str_ << "# Lattice: " << L.name() << " (";
+  info_str_ << "Size="<<L.size1()<<"x"<<L.size2()<<"x"<< L.size3()<<", ";
+  info_str_ << "Sites/unitcell="<<L.num_basis_sites()<<", ";
+  info_str_ << "Boundary="<<static_cast<int>(L.bc1_periodicity()) << "-"; 
+  info_str_ << static_cast<int>(L.bc2_periodicity()) << "-";
+  info_str_ << static_cast<int>(L.bc3_periodicity()) << ")\n";
+  info_str_ << "# No of sites = " << L.num_sites() << "\n";
+  info_str_ << "# Model: " << model_name << "\n";
+  info_str_.precision(6);
+  info_str_.setf(std::ios_base::fixed);
+  for (const auto& p : parms_) 
+    info_str_ << "# " << p.first << " = " << p.second << "\n";
+}
+
+
 
 
 

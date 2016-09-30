@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <tuple>
+#include <set>
 #include <stdexcept>
 #include "../scheduler/task.h"
 #include "../constants.h"
@@ -20,9 +21,13 @@
 
 namespace lattice {
 
+// Global Constants
+const unsigned MAX_SITE_TYPES = 20;
+const unsigned MAX_BOND_TYPES = 40;
+
 /*---------------lattice types-----------------*/
 enum class lattice_id {
-  UNDEFINED, SQUARE, CHAIN, HONEYCOMB
+  UNDEFINED, SQUARE, CHAIN, HONEYCOMB, SIMPLECUBIC
 };
 
 /*---------------Lattice site class-----------------*/
@@ -40,6 +45,7 @@ public:
   ~Site() {}
   // setter functions
   static void reset_count(void) { num_site=0; }
+  void reset_type(const unsigned& t) { type_=t; }
   void reset_uid(const unsigned& uid) { uid_=uid; }
   void reset_bravindex(const Vector3i& idx) { bravindex_=idx; }
   void reset_coord(const Vector3d& v) { coord_=v; }
@@ -47,13 +53,13 @@ public:
   void translate_by(const int& id_offset, const Vector3i& bravindex_offset, const Vector3d& coord_offset); 
 
   // getter functions
-  int id(void) const {return id_;}
-  unsigned uid(void) const {return uid_;}
-  unsigned type(void) const {return type_;}
-  unsigned atomid(void) const {return atomid_;}
-  Vector3i bravindex(void) const { return bravindex_; }
-  Vector3d coord(void) const {return coord_;}
-  Vector3d cell_coord(void) const {return cell_coord_;}
+  const int& id(void) const {return id_;}
+  const unsigned& uid(void) const {return uid_;}
+  const unsigned& type(void) const {return type_;}
+  const unsigned& atomid(void) const {return atomid_;}
+  const Vector3i& bravindex(void) const { return bravindex_; }
+  const Vector3d& coord(void) const {return coord_;}
+  const Vector3d& cell_coord(void) const {return cell_coord_;}
   // friends
   friend std::ostream& operator<<(std::ostream& os, const Site& site);
 private:
@@ -79,6 +85,7 @@ public:
   // setter functions
   static void reset_count(void) { num_bond=0; }
   void reset_id(const unsigned& id) { id_=id; }
+  void reset_type(const unsigned& t) { type_=t; }
   void reset_src_offset(const Vector3i& idx) { src_offset_=idx; }
   void reset_tgt_offset(const Vector3i& idx) { tgt_offset_=idx; }
   void reset_bravindex(const Vector3i& idx) { bravindex_=idx; }
@@ -133,17 +140,22 @@ public:
   void reset_a3(const Vector3d& av) { a3=av; }
   void reset(const std::vector<Site>& new_sites, const std::vector<Bond>& new_bonds); 
   // getter functions
-  Vector3d vector_a1(void) const { return a1; }
-  Vector3d vector_a2(void) const { return a2; }
-  Vector3d vector_a3(void) const { return a3; }
-  Vector3i bravindex(void) const { return bravindex_; }
-  Vector3d coord(void) const {return coord_;}
+  const Vector3d& vector_a1(void) const { return a1; }
+  const Vector3d& vector_a2(void) const { return a2; }
+  const Vector3d& vector_a3(void) const { return a3; }
+  const Vector3i& bravindex(void) const { return bravindex_; }
+  const Vector3d& coord(void) const {return coord_;}
   unsigned num_sites(void) const { return sites.size(); }
   unsigned num_bonds(void) const { return bonds.size(); }
+  unsigned num_site_types(void) const { return sitetypes_map_.size(); }
+  unsigned num_bond_types(void) const { return bondtypes_map_.size(); }
   void translate_by(const Vector3i& bravindex_offset, const int& cell_id_offset);
   void rotate_by(const Eigen::Matrix3d& matrix);
-  Site site(const unsigned& i) const { return sites[i]; }
-  Bond bond(const unsigned& i) const { return bonds[i]; }
+  const Site& site(const unsigned& i) const { return sites[i]; }
+  const Bond& bond(const unsigned& i) const { return bonds[i]; }
+  std::map<unsigned,unsigned> sitetypes_map(void) const { return sitetypes_map_; }
+  std::map<unsigned,unsigned> bondtypes_map(void) const { return bondtypes_map_; }
+  void finalize(void);
 private:
   int id {0};
   unsigned max_site_type_val {0};
@@ -156,6 +168,8 @@ private:
   std::vector<Bond> bonds;
   Vector3i bravindex_ {Vector3i(0, 0, 0)};
   Vector3d coord_ {Vector3d(0.0, 0.0, 0.0)};
+  std::map<unsigned,unsigned> sitetypes_map_; // user set value to contiguous value 
+  std::map<unsigned,unsigned> bondtypes_map_; // user set value to contiguous value 
 };
 
 /*---------------spatial dimension type-----------------*/
@@ -234,6 +248,13 @@ public:
   Unitcell get_translated_cell(const Vector3i& bravindex_offset) const;
   int mapped_site_id(const unsigned& local_id, const Vector3i& bravindex) const;
   bool connect_bond(Bond& bond) const;
+
+  unsigned num_unitcell_sites(void) const { return unitcell.num_sites(); }
+  unsigned num_unitcell_bonds(void) const { return unitcell.num_bonds(); }
+  const Site& unitcell_site(const unsigned& i) const { return unitcell.site(i); }
+  const Bond& unitcell_bond(const unsigned& i) const { return unitcell.bond(i); }
+  std::map<unsigned,unsigned> sitetypes_map(void) const { return unitcell.sitetypes_map(); }
+  std::map<unsigned,unsigned> bondtypes_map(void) const { return unitcell.bondtypes_map(); }
 private:
   struct Extent {unsigned size; boundary_type bc; boundary_type periodicity;};
   enum Dimension {dim1, dim2, dim3};

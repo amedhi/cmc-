@@ -10,6 +10,7 @@
 #define GRAPH_H
 
 #include "lattice.h"
+#include <stdexcept>
 #include <boost/graph/adjacency_list.hpp>
 //#include <Eigen/Dense>
 
@@ -37,51 +38,96 @@ struct EdgeProperties {
 
 using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, 
               VertexProperties, EdgeProperties>;
-using vertex_descriptor = boost::graph_traits<Graph>::vertex_descriptor;
-using edge = boost::graph_traits<Graph>::edge_descriptor;
-using vertex_iterator = boost::graph_traits<Graph>::vertex_iterator;
-using edge_iterator = boost::graph_traits<Graph>::edge_iterator;
-using out_edge_iterator = boost::graph_traits<Graph>::out_edge_iterator;
 
 
-class LatticeGraph 
+class LatticeGraph : public Graph 
 {
 public:
+  //using vertex_descriptor = boost::graph_traits<Graph>::vertex_descriptor;
+  //using edge_descriptor = boost::graph_traits<Graph>::edge_descriptor;
+  //using vertex_iterator = boost::graph_traits<Graph>::vertex_iterator;
+  //using edge_iterator = boost::graph_traits<Graph>::edge_iterator;
+  //using out_edge_iterator = boost::graph_traits<Graph>::out_edge_iterator;
+  using site_descriptor = boost::graph_traits<Graph>::vertex_descriptor;
+  using site_iterator = boost::graph_traits<Graph>::vertex_iterator;
+  using bond_iterator = boost::graph_traits<Graph>::edge_iterator;
+  using out_bond_iterator = boost::graph_traits<Graph>::out_edge_iterator;
+  using in_bond_iterator = boost::graph_traits<Graph>::in_edge_iterator;
+  //using adjacency_iterator = boost::graph_traits<Graph>::adjacency_iterator;
+
   // ctors
-  LatticeGraph() { g.clear(); }
+  LatticeGraph() { clear(); }
+  LatticeGraph(input::Parameters& parms); 
   LatticeGraph(const Lattice& lattice);
   ~LatticeGraph() {}
 
   // setter functions
-  void construct(const Lattice& lattice);
+  void construct(input::Parameters& parms); 
 
   // getter functions
-  unsigned num_vertices(void) const { return boost::num_vertices(g); }
-  vertex_iterator vertex_begin(void) const { return vi_begin; }
-  vertex_iterator vertex_end(void) const { return vi_end; }
-  //unsigned vertex_id(const vertex_iterator& vi) const { return vertex_index_map[*vi]; }
-  //unsigned vertex_id(const unsigned& i) const { return vertex_index_map[boost::vertex(i, g)]; }
-  std::pair<vertex_iterator, vertex_iterator> vertices(void) const { return boost::vertices(g); }
-  vertex_descriptor vertex(const unsigned& i) const { return boost::vertex(i, g); }
+  const Lattice& lattice(void) { return lattice_; }
+
+  // vertex accessors
+  const unsigned& num_sites(void) const { return num_vertices_; }
+  std::pair<const site_iterator, const site_iterator> sites(void) const 
+    { return std::make_pair(vi_begin_, vi_end_); }
+  const site_iterator& sites_begin(void) const { return vi_begin_; }
+  const site_iterator& sites_end(void) const { return vi_end_; }
+  unsigned site(const site_iterator& vi) const { return static_cast<unsigned>(*vi); }
+  unsigned site(const site_descriptor& v) const { return static_cast<unsigned>(v); }
+  const std::set<unsigned>& site_types(void) const { return vertex_types_set_; } 
+  const unsigned& site_type(const site_iterator& vi) const { return this->operator[](*vi).type; }
+  const unsigned& site_type(const site_descriptor& v) const { return this->operator[](v).type; }
+  const unsigned& site_uid(const site_iterator& vi) const { return this->operator[](*vi).uid; }
+  const unsigned& site_uid(const site_descriptor& v) const { return this->operator[](v).uid; }
+  const Vector3d& site_cellcord(const site_iterator& vi) const { return this->operator[](*vi).cell_coord; }
+  const Vector3d& site_cellcord(const site_descriptor& v) const { return this->operator[](v).cell_coord; }
+
+  /*
+  vertex_descriptor vertex(const unsigned& i) const { return boost::vertex(i, *this); }
   unsigned vertex_id(const vertex_descriptor& v) const { return vertex_index_map[v]; }
-  unsigned vertex_uid(const vertex_descriptor& v) const { return g[v].uid; }
-  Vector3d vertex_cellcord(const vertex_descriptor& v) const { return g[v].cell_coord; }
+  unsigned vertex_id(const vertex_iterator& vi) const { return vertex_index_map[*vi]; }
+  unsigned vertex_uid(const vertex_descriptor& v) const { return this->operator[](v).uid; }
+  Vector3d vertex_cellcord(const vertex_descriptor& v) const { return this->operator[](v).cell_coord; }
   //unsigned vertex_uid(const unsigned& i) const { return g[boost::vertex(i, g)].uid; }
-  unsigned vertex_type(const vertex_descriptor& v) const { return g[v].type; }
-  unsigned vertex_type(const vertex_iterator& vi) const { return g[*vi].type; }
-  unsigned edge_type(const out_edge_iterator& ei) const { return g[*ei].type; }
-  vertex_descriptor target_vertex(const out_edge_iterator& ei) const { return target(*ei, g); }
+  unsigned vertex_type(const vertex_descriptor& v) const { return this->operator[](v).type; }
+  unsigned vertex_type(const vertex_iterator& vi) const { return this->operator[](*vi).type; }
+  */
+
+  // edge accessors
+  const bond_iterator& bonds_begin(void) const { return ei_begin_; }
+  const bond_iterator& bonds_end(void) const { return ei_end_; }
+  const unsigned& bond_type(const bond_iterator& ei) const { return this->operator[](*ei).type; }
+  const unsigned& bond_type(const out_bond_iterator& ei) const { return this->operator[](*ei).type; }
+  const unsigned& bond_type(const in_bond_iterator& ei) const { return this->operator[](*ei).type; }
+  site_descriptor source(const bond_iterator& ei) const { return boost::source(*ei, *this); }
+  site_descriptor source(const out_bond_iterator& ei) const { return boost::source(*ei, *this); }
+  site_descriptor source(const in_bond_iterator& ei) const { return boost::source(*ei, *this); }
+  site_descriptor target(const bond_iterator& ei) const { return boost::target(*ei, *this); }
+  site_descriptor target(const out_bond_iterator& ei) const { return boost::target(*ei, *this); }
+  site_descriptor target(const in_bond_iterator& ei) const { return boost::target(*ei, *this); }
   //using out_edges = boost::out_edges;
-  std::pair<out_edge_iterator, out_edge_iterator> out_edges(const vertex_descriptor& v) const 
-    { return boost::out_edges(v, g); }
+  std::pair<out_edge_iterator, out_edge_iterator> out_bonds(const site_iterator& vi) const 
+    { return boost::out_edges(*vi, *this); }
+  std::pair<out_bond_iterator, out_bond_iterator> out_bonds(const site_descriptor& v) const 
+    { return boost::out_edges(v, *this); }
+  std::pair<in_bond_iterator, in_bond_iterator> in_bonds(const site_iterator& vi) const 
+    { return boost::in_edges(*vi, *this); }
+  std::pair<in_bond_iterator, in_bond_iterator> in_bonds(const site_descriptor& v) const 
+    { return boost::in_edges(v, *this); }
   // friends
 private:
-  Graph g;
-  vertex_iterator vi_begin, vi_end;
-  edge_iterator ei_begin, ei_end;
+  void construct_graph(void);
+  //Graph g;
+  unsigned num_vertices_{0};
+  unsigned num_edges_{0};
+  vertex_iterator vi_begin_, vi_end_;
+  edge_iterator ei_begin_, ei_end_;
   boost::property_map<graph::Graph, boost::vertex_index_t>::type vertex_index_map;
   //boost::property_map<graph::Graph, unsigned VertexProperties::*>::type vertex_uid_map;
   //boost::property_map<graph::Graph, Vector3d VertexProperties::*>::type vertex_cellcord_map;
+  std::set<unsigned> vertex_types_set_;
+  lattice::Lattice lattice_;
 };
 
 

@@ -7,41 +7,36 @@
 * Last Modified time: 2015-09-28 22:50:08
 *----------------------------------------------------------------------------*/
 #include <iostream>
-#include "inputparams.h"
+#include "worker.h"
 
 #ifndef SCHEDULER_TASK_H
 #define SCHEDULER_TASK_H
 
 namespace scheduler {
 
-class AbstractTask
+class AbstractTask 
 {
 public:
-  virtual ~AbstractTask() {};
-  virtual void start(input::Parameters& p) = 0; // start all runs
-  virtual void run() = 0; // run for some time (in seconds)
-  virtual void halt() = 0; // halt all runs, simulation is finished        
+  ~AbstractTask() {}
+  virtual Worker* make_worker(input::Parameters& p) const = 0;
+  virtual void print_copyright(std::ostream& out) const = 0;
 };
 
+template <class WORKER>
 class Task : public AbstractTask
 {
 public:
-  Task();
-  virtual ~Task();
-  
-  //virtual void construct(); // needs to be called to finish construction
-  void start(input::Parameters& p) override; // start simulation
-  void run() override;// run a few steps and return control
-  virtual void dostep()=0; // do a step
-  //void finish(); // mark as finished
-  // bool started() const { return started_;}
-  void halt() override;
-  
-protected:
-  bool finished_;
-
-private:
-  bool started_; // is the task running?
+  Task() {}
+  ~Task() {}
+  //virtual WORKER* make_worker(input::Parameters& p) const;
+  Worker* make_worker(input::Parameters& p) const override
+  {
+    return new WORKER(p);
+  }
+  void print_copyright(std::ostream& out) const override
+  {
+    WORKER::print_copyright(out);
+  }
 };
 
 

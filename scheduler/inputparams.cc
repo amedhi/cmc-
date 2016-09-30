@@ -39,7 +39,7 @@ JobInput::JobInput(const std::string& inputfile): n_params(0), n_tasks(0)
   }
 }
 
-bool JobInput::read_params(const std::string& inputfile)
+bool JobInput::read_inputs(const std::string& inputfile)
 {
   try {
     n_tasks = parse(inputfile);
@@ -295,7 +295,7 @@ unsigned int JobInput::parse(const std::string& inputfile)
   return n_sets;
 } // JobParms::parse()
 
-void JobInput::init_task_param(Parameters& p)
+void JobInput::init_task_parameters(Parameters& p)
 {
   using key_val_pair = std::pair<const std::string, Parameters::pval>;
   Parameters::pval value{false,value_type::nan,false,0.0,""};
@@ -316,7 +316,7 @@ void JobInput::init_task_param(Parameters& p)
 } // init_task_params
 
 
-void JobInput::set_task_param(Parameters& p, const unsigned& task_id)
+void JobInput::set_task_parameters(Parameters& p, const unsigned& task_id)
 {
   // indices to access the first parameter set
   std::vector<unsigned> idx(param_list.size());

@@ -123,6 +123,8 @@ void Unitcell::clear(void)
   a1 = Vector3d(0.0, 0.0, 0.0); 
   a2 = Vector3d(0.0, 0.0, 0.0); 
   a3 = Vector3d(0.0, 0.0, 0.0); 
+  sitetypes_map_.clear();
+  bondtypes_map_.clear();
 }
 
 void Unitcell::set_basis(const Vector3d& av1, const Vector3d& av2, const Vector3d& av3)
@@ -176,6 +178,46 @@ int Unitcell::add_bond(const Bond& bond, const Vector3i& src_offset, const Vecto
   bonds.back().reset_src_offset(src_offset);
   bonds.back().reset_tgt_offset(tgt_offset);
   return bonds.back().id();
+}
+
+void Unitcell::finalize(void) 
+{
+  // Re-assign the sites & bond 'type' values making them contiguous
+  sitetypes_map_.clear();
+  // store the sitetype map
+  std::set<unsigned> types;
+  // type values sorted in the set
+  for (const auto& s : sites) types.insert({s.type()});
+  // map to contiguous indices
+  unsigned i = 0;
+  for (const auto& t : types) {
+    auto status = sitetypes_map_.insert({t, i});
+    if (status.second) i++;
+  }
+  // now reassign the values
+  for (auto& s : sites) {
+    unsigned i = sitetypes_map_[s.type()];
+    s.reset_type(i);
+  }
+
+  // same for bonds
+  bondtypes_map_.clear();
+  types.clear();
+  for (const auto& b : bonds) types.insert({b.type()});
+  i = 0;
+  for (const auto& t : types) {
+    auto status = bondtypes_map_.insert({t, i});
+    if (status.second) i++;
+  }
+  for (auto& b : bonds) {
+    unsigned i = bondtypes_map_[b.type()];
+    b.reset_type(i);
+  }
+  // type values within range?
+  if (sitetypes_map_.size() >= MAX_SITE_TYPES) 
+    throw std::range_error("error: latticelibrary: number of 'site types' exceed limit");
+  if (bondtypes_map_.size() >= MAX_BOND_TYPES) 
+    throw std::range_error("error: latticelibrary: number of 'bond types' exceed limit");
 }
 
 void Unitcell::reset(const std::vector<Site>& new_sites, const std::vector<Bond>& new_bonds)

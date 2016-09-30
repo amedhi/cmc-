@@ -37,20 +37,21 @@ const option::Descriptor usage[] =
  {0,0,0,0,0,0}  // mandatory, to signal end of options 
 };
 
-class CmdArg
+class CommandArg
 {
 public:
-  CmdArg(int argc, const char *argv[]); // constructor
-  CmdArg(); // default constructor
-  ~CmdArg(); // destructor
+  CommandArg(int argc, const char *argv[]); // constructor
+  CommandArg(); // default constructor
+  ~CommandArg(); // destructor
   std::string extract_filename(const std::string& path) const;
   bool process_options(void) const;
   bool have_option(enum OptionIndex idx) const { return options[idx]; }
-  bool not_valid(void) const {return !valid;}
+  bool not_valid(void) const {return !valid_;}
+  bool valid(void) const {return valid_;}
   std::string filename(void) const { return inputfile; }
 
 private:
-  bool valid;
+  bool valid_;
   int option_count;
   int nonOption_count;
   std::string progname;
