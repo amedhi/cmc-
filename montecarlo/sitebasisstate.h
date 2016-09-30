@@ -20,10 +20,10 @@ public:
     : type_{type}, idx_{0}, max_idx_{max_idx} {}
   ~SiteBasisState() {};
 
-  const state_idx& type(void) const { return type_; }
-  const state_idx& idx(void) const { return idx_; }
-  const state_idx& max_idx(void) const { return max_idx_; }
-  void reset_idx(const state_idx& idx) { idx_=idx; }
+  inline const state_idx& type(void) const { return type_; }
+  inline const state_idx& idx(void) const { return idx_; }
+  inline const state_idx& max_idx(void) const { return max_idx_; }
+  inline void reset_idx(const state_idx& idx) { idx_=idx; }
 private:
   unsigned type_{0};
   state_idx idx_{0};

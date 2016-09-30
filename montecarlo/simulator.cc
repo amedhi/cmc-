@@ -14,8 +14,14 @@ namespace mc {
 Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
 {
   Model::construct(LatticeGraph::lattice(), parms);
+
   // system state
   state.resize(num_sites());
+  for (auto s=sites_begin(); s!=sites_end(); ++s) {
+    unsigned stype = site_type(s);
+    state_idx max_idx = sitebasis_dimension(stype)-1;
+    state[site(s)] = SiteState(stype, 0, max_idx);
+  }
 
   // Random number generator
   rng_seed = parms.set_value("rng_seed", 0);
@@ -24,7 +30,7 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
   rng.set_site_generator(0, num_sites()-1);
   // site types & a RNG of state indices for each site type
   for (const unsigned& site_type : site_types()) {
-    unsigned max_idx = sitebasis_dimension(site_type) - 1;
+    unsigned max_idx = sitebasis_dimension(site_type)-1;
     rng.add_state_generator(site_type, 0, max_idx);
   }
 
@@ -54,7 +60,6 @@ void Simulator::start(input::Parameters& parms)
 
   // observables
   observables.reset();
-  //clear_observables();
 
   /*-----------------Simulation START-----------------*/
   // initial state
@@ -125,15 +130,12 @@ inline void Simulator::do_measurements(void)
   }
 }
 
-
 void Simulator::init_state_random(void)
 {
   // random initial state
-  for (auto s=sites_begin(); s!=sites_end(); ++s) {
-    unsigned stype = site_type(s);
-    state_idx max_idx = sitebasis_dimension(stype)-1;
-    state_idx idx = rng.random_idx(stype);
-    state[site(s)] = SiteState(stype, idx, max_idx);
+  for (auto& s : state) {
+    state_idx idx = rng.random_idx(s.type());
+    s.reset_idx(idx);
   }
 } 
 
