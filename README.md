@@ -17,10 +17,6 @@ cmc++ is a program written in C++ for doing Monte Carlo simulation for
 The core codes are model and lattice geometry independent. This means 
 it should work for all 'classical' models and all lattice geometries once 
 these definitions are incorporated into the project in an appropriate manner. 
-#The program can be build in serial mode or in MPI mode by simply a choice of
-#compiler directive. In parallel mode, the program creates multiple 
-#independent Markov chains in each processor and the final results 
-#averaged over the results from these independent chains.  
 The code is designed 
 to make it easy to add new features - such as, adding a new model or lattice, 
 adding a new physical observable to calculate or a new input parameter.
