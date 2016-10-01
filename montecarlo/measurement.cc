@@ -7,6 +7,7 @@
 * Last Modified time: 2016-03-16 16:47:10
 *----------------------------------------------------------------------------*/
 #include <set>
+#include <cmath>
 #include "simulator.h"
 
 namespace mc {
@@ -66,14 +67,14 @@ double Simulator::potts_magnetization(void)
   for (unsigned i=0; i<num_sitetypes; ++i) {
     for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
       SiteBasisState state(i, j, sitebasis_dimension(i)-1); 
-      int spin = static_cast<int>(observables.potts_magn_op().apply(state));
+      int spin = std::nearbyint(observables.potts_magn_op().apply(state));
       site_spins[i].insert(spin);
     }
   }
 
   // set of spin values for all the sites in the lattice
   for (const auto& s : state) {
-    int spin = static_cast<int>(observables.potts_magn_op().apply(s));
+    int spin = std::nearbyint(observables.potts_magn_op().apply(s));
     lattice_spins[s.type()].insert(spin);
   }
 

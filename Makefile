@@ -132,8 +132,8 @@ DEPHDRS += mcdata.h
 DEPHDRS += observables.h 
 observables.o: $(DEPHDRS)
 DEPHDRS += simulator.h 
-measurement.o: $(DEPHDRS)
 simulator.o: $(DEPHDRS)
+measurement.o: $(DEPHDRS)
 main.o: $(DEPHDRS)
 
 #-------------------------------------------------------
