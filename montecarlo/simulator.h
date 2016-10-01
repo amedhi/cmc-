@@ -41,13 +41,6 @@ public:
   void halt(void) {} 
   static void print_copyright(std::ostream& os);
 private:
-  // typedefs
-  //using site_iterator = LatticeGraph::site_iterator;
-  //using bond_iterator = LatticeGraph::bond_iterator;
-  //using site_descriptor = LatticeGraph::site_descriptor;
-  //using siteterm_iterator = Model::siteterm_iterator;
-  //using bondterm_iterator = Model::bondterm_iterator;
-  // system state
   RandomNumber rng;
   std::vector<SiteBasisState> state;
   std::array<Eigen::MatrixXd, lattice::MAX_BOND_TYPES> boltzmann_table;
@@ -62,23 +55,18 @@ private:
   int warmup;
   int min_interval;
 
-
   // observables
   Observables observables;
-
-
-  //alps::RealObservable Magnetization("Magnetization");
 
   void init(void);
   void init_state_random(void);
   void init_boltzmann_table(void);
   void update_state_metropolis(void);
-  void init_observables(const input::Parameters& parms);
   void do_measurements(void);
   mc::VectorData get_energy(void);
-  double magnetization(void);
-  double potts_magnetization(void);
-  double strain(void);
+  double get_magnetization(void);
+  double get_potts_magnetization(void);
+  double get_strain(void);
 };
 
 

@@ -47,7 +47,7 @@ mc::VectorData Simulator::get_energy(void)
 }
 
 /*----------------------Ising magnetization-----------------------*/
-double Simulator::magnetization(void)
+double Simulator::get_magnetization(void)
 {
   double ms = 0;
   for (const auto& s : state) {
@@ -57,7 +57,7 @@ double Simulator::magnetization(void)
 };
 
 /*----------------------Potts magnetization-----------------------*/
-double Simulator::potts_magnetization(void)
+double Simulator::get_potts_magnetization(void)
 {
   unsigned num_sitetypes = basis().size();
   std::vector<std::multiset<int> > lattice_spins(num_sitetypes);
@@ -93,7 +93,7 @@ double Simulator::potts_magnetization(void)
 }
 
 /*----------------------Strain-----------------------*/
-double Simulator::strain(void)
+double Simulator::get_strain(void)
 {
   double ms = 0;
   for (const auto& s : state) {

@@ -44,7 +44,6 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
 
   // observables
   observables.init(parms, *this, print_copyright);
-  //init_observables(parms);
 }
 
 void Simulator::start(input::Parameters& parms) 
@@ -52,12 +51,12 @@ void Simulator::start(input::Parameters& parms)
   // update model parameters
   Model::update_parameters(parms);
 
-  // set variable objects
+  // set variable parameters
   T = parms.set_value("T", 1.0);
   kB = parms.set_value("kB", 1.0);
   beta = 1.0/(kB*T);
 
-  // values of exp(-beta*E) for a bond for Metropolis algorithm
+  // values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
   init_boltzmann_table();
 
   // observables
@@ -68,7 +67,6 @@ void Simulator::start(input::Parameters& parms)
   init_state_random();
   // warmup runs
   for (int i=0; i<warmup; ++i) update_state_metropolis();
-
   // measurement
   int count = 0;
   int num_measurement = 0;
@@ -96,21 +94,21 @@ inline void Simulator::do_measurements(void)
 
   // magnetization
   if (observables.magn() || observables.magn_sq()) {
-    double x = magnetization();
+    double x = get_magnetization();
     if (observables.magn()) observables.magn() << x;
     if (observables.magn_sq()) observables.magn_sq() << x*x;
   }
 
   // Potts magnetization
   if (observables.potts_magn() || observables.potts_magn_sq()) {
-    double x = potts_magnetization();
+    double x = get_potts_magnetization();
     if (observables.potts_magn()) observables.potts_magn() << x;
     if (observables.potts_magn_sq()) observables.potts_magn_sq() << x*x;
   }
 
   // strain
   if (observables.strain() || observables.strain_sq()) {
-    double x = strain();
+    double x = get_strain();
     if (observables.strain()) observables.strain() << x;
     if (observables.strain_sq()) observables.strain_sq() << x * x;
   }
@@ -155,11 +153,9 @@ void Simulator::update_state_metropolis(void)
   }
 }
 
-
 // exp(-beta*E) factors for different bond types
 void Simulator::init_boltzmann_table(void)
 {
-  //boltzmann_table.clear();
   for (auto& mat : boltzmann_table) mat = Eigen::MatrixXd();
   // get bond types
   for (unsigned i=0; i<lattice().num_unitcell_bonds(); ++i) {
@@ -194,80 +190,10 @@ void Simulator::init_boltzmann_table(void)
       }
     }
     // matrix built for this bond type
-    //boltzmann_table.insert({b.type(), exp_betaE});
     boltzmann_table[b.type()] = exp_betaE;
   }
 }
 
-void Simulator::init_observables(const input::Parameters& parms)
-{
-  /*need_energy = parms.set_value("energy", false);
-  need_magn = parms.set_value("magnetization", false);
-  if (need_magn) {
-    magn_op.init(basis(), "S(i)");
-    magn_data.init("Magnetization");
-    magn_out.open("res_magnetization.txt");
-    magn_out << std::left;
-    magn_out << std::setw(12) << "#T";
-    magn_out << std::setw(12) << "Magn";
-    magn_out << std::setw(12) << "err";
-    magn_out << std::setw(12) << "samples";
-    magn_out << std::setw(12) << "conv";
-    magn_out << std::setw(12) << "tau";
-    magn_out << std::endl;
-  }
-  if (need_energy) {
-    energy_size = num_siteterms() + num_bondterms();
-    energy_data.init("Energy", energy_size);
-    energy_out.open("res_energy.txt");
-  }
-  */
-}
-
-
-/*void Simulator::init(void)
-{
-  // random initial state
-  init_state_random();
-
-  // energy
-  //si_end = std::vector<SiteTerm>::end();
-  for (auto s=sites_begin(); s!=sites_end(); ++s) {
-    state_idx idx = state[site(s)].idx();
-    unsigned type = state[site(s)].type();
-    for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
-      double m = sterm->matrix_element(type, idx);
-      //std::cout << *s << " " << m << std::endl;
-    }
-  }
-
-  // Bond Terms
-  for (auto b=bonds_begin(); b!=bonds_end(); ++b) {
-    unsigned type = bond_type(b);
-    site_descriptor src = source(b);
-    site_descriptor tgt = target(b);
-    state_idx src_idx = state[site(src)].idx();
-    state_idx tgt_idx = state[site(tgt)].idx();
-    for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
-      double m = bterm->matrix_element(type, src_idx, tgt_idx);
-      //std::cout << "bond: " << " " << m << std::endl;
-    }
-  }
-
-  //for (unsigned i=0; i<state.size(); ++i) {
-    //unsigned site_type = vertex_type(i);
-    //state_idx idx = state[i].idx();
-   // for (std::tie(st,st_end)=site_terms(); st!=st_end; ++st) {
-      //double m = st->matrix_element(site_type, idx);
-      //std::cout << i << " " << m << std::endl;
-   // }
-    //}
-    //std::cout << vertex_id(vi) << std::endl;
-    //matrixelem[site_type] += siteterm[i].apply_operator(site_type, state_idx);
-    // evaluate(siteterm site_type, stat_idx)
-    //}
-  //}
-}*/ 
 void Simulator::print_copyright(std::ostream& os) 
 {
   os << "#" << std::string(72,'-') << "\n";
