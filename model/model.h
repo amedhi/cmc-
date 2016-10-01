@@ -61,6 +61,8 @@ public:
     { return std::make_pair(std::vector<BondTerm>::cbegin(), std::vector<BondTerm>::cend()); }
   unsigned num_siteterms(void) const { return std::vector<SiteTerm>::size(); }
   unsigned num_bondterms(void) const { return std::vector<BondTerm>::size(); }
+  unsigned num_total_terms(void) const 
+    { return std::vector<SiteTerm>::size()+std::vector<BondTerm>::size(); }
   void get_term_names(std::vector<std::string>& term_names) const;
   std::ostream& print_info(std::ostream& os) const { return os << info_str_.str(); }
 

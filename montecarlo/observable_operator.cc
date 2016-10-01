@@ -33,7 +33,7 @@ void SiteObsOperator::init(const model::BasisDescriptor& basis, const std::strin
 void SiteObsOperator::init(const model::BasisDescriptor& basis, 
   const op_sitetypes& sitetypes, const std::string& op_expr, const std::string& site)
 {
-  // construct the site operators
+  // construct the matrices for specified site_types
   for (unsigned type=0; type<basis.size(); ++type) {
     if (sitetypes.find(type) != sitetypes.end()) {
       push_back(model::SiteOperator(op_expr,site));

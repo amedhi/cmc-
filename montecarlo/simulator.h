@@ -58,7 +58,6 @@ private:
   double beta; 
 
   // mc parameters
-  int rng_seed; 
   int measure_samples; 
   int warmup;
   int min_interval;
@@ -66,15 +65,8 @@ private:
 
   // observables
   Observables observables;
-  bool need_magn{false};
-  SiteObsOperator magn_op;
-  mc::RealObservableData magn_data;
-  std::ofstream magn_out; 
 
-  bool need_energy{false};
-  unsigned energy_size;
-  mc::VectorObservableData energy_data;
-  std::ofstream energy_out;
+
   //alps::RealObservable Magnetization("Magnetization");
 
   void init(void);
@@ -83,6 +75,10 @@ private:
   void update_state_metropolis(void);
   void init_observables(const input::Parameters& parms);
   void do_measurements(void);
+  mc::VectorData get_energy(void);
+  double magnetization(void);
+  double potts_magnetization(void);
+  double strain(void);
 };
 
 

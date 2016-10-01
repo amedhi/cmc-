@@ -20,12 +20,15 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
   for (auto s=sites_begin(); s!=sites_end(); ++s) {
     unsigned stype = site_type(s);
     state_idx max_idx = sitebasis_dimension(stype)-1;
+    if (max_idx < 1) {
+      throw std::range_error("Simulator::Simulator: site basis dimension must be >= 2");
+    }
     state[site(s)] = SiteState(stype, 0, max_idx);
   }
 
   // Random number generator
-  rng_seed = parms.set_value("rng_seed", 0);
-  if (rng_seed>0) rng.time_seed();
+  int seed_type = parms.set_value("rng_seed", 0);
+  rng.seed(seed_type);
   // lattice site generator 
   rng.set_site_generator(0, num_sites()-1);
   // site types & a RNG of state indices for each site type
@@ -41,7 +44,6 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
 
   // observables
   observables.init(parms, *this, print_copyright);
-  magn_op.init(basis(), "S(i)");
   //init_observables(parms);
 }
 
@@ -87,46 +89,30 @@ void Simulator::start(input::Parameters& parms)
 // measurements
 inline void Simulator::do_measurements(void)
 {
-  // magnetization
-  if (observables.magn()) {
-    double ms = 0;
-    for (const auto& s : state) {
-      ms += magn_op.apply(s);
-    }
-    //magn_data << std::abs(ms)/num_sites();
-    observables.magn() << std::abs(ms)/num_sites();
-  }
-
   // energy
   if (observables.energy_terms()) {
-    mc::VectorData state_energy(observables.energy_terms().size());
-    for (unsigned i=0; i<observables.energy_terms().size(); ++i) state_energy(i) = 0.0;
-    // bond energies
-    for (auto b=bonds_begin(); b!=bonds_end(); ++b) {
-      unsigned type = bond_type(b);
-      auto src = source(b);
-      auto tgt = target(b);
-      state_idx src_idx = state[site(src)].idx();
-      state_idx tgt_idx = state[site(tgt)].idx();
-      unsigned term = 0;
-      for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
-        double m = bterm->matrix_element(type, src_idx, tgt_idx);
-        double c = bterm->coupling(type);
-        //std::cout << "bond: " << " " << m << std::endl;
-        state_energy[term++] += m * c;
-      }
-    }
-    // site energies
-    for (const auto& s : state) {
-      unsigned term = num_bondterms();
-      for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
-        double m = sterm->matrix_element(s.type(), s.idx());
-        double c = sterm->coupling(s.type());
-        state_energy[term++] += m * c;
-      }
-    }
-    // energy per site
-    observables.energy_terms() << state_energy/num_sites();
+    observables.energy_terms() << get_energy();
+  }
+
+  // magnetization
+  if (observables.magn() || observables.magn_sq()) {
+    double x = magnetization();
+    if (observables.magn()) observables.magn() << x;
+    if (observables.magn_sq()) observables.magn_sq() << x*x;
+  }
+
+  // Potts magnetization
+  if (observables.potts_magn() || observables.potts_magn_sq()) {
+    double x = potts_magnetization();
+    if (observables.potts_magn()) observables.potts_magn() << x;
+    if (observables.potts_magn_sq()) observables.potts_magn_sq() << x*x;
+  }
+
+  // strain
+  if (observables.strain() || observables.strain_sq()) {
+    double x = strain();
+    if (observables.strain()) observables.strain() << x;
+    if (observables.strain_sq()) observables.strain_sq() << x * x;
   }
 }
 

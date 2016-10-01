@@ -44,6 +44,7 @@ SRCS+= random.cc
 SRCS+= observable_operator.cc
 SRCS+= observables.cc
 SRCS+= simulator.cc
+SRCS+= measurement.cc
 SRCS+= main.cc
 
 HDRS = optionparser.h cmdargs.h inputparams.h worker.h task.h scheduler.h \
@@ -131,6 +132,7 @@ DEPHDRS += mcdata.h
 DEPHDRS += observables.h 
 observables.o: $(DEPHDRS)
 DEPHDRS += simulator.h 
+measurement.o: $(DEPHDRS)
 simulator.o: $(DEPHDRS)
 main.o: $(DEPHDRS)
 

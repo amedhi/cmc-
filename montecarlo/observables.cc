@@ -9,19 +9,23 @@
 namespace mc {
 
 Observables::Observables() 
-  : magn_("Magnetization")
-  , magn_sq_("Magnetization^2")
-  , energy_("Energy")
+  : energy_("Energy")
   , energy_sq_("Energy^2")
+  , magn_("Magnetization")
+  , magn_sq_("Magnetization^2")
+  , potts_magn_("PottsMagnetization")
+  , potts_magn_sq_("PottsMagnetization^2")
   , strain_("Strain")
   , strain_sq_("Strain^2")
   , energy_terms_("EnergyTerms")
   , energy_terms_sq_("EnergyTerms^2")
 {
-  push_back(magn_);
-  push_back(magn_sq_);
   push_back(energy_);
   push_back(energy_sq_);
+  push_back(magn_);
+  push_back(magn_sq_);
+  push_back(potts_magn_);
+  push_back(potts_magn_sq_);
   push_back(strain_);
   push_back(strain_sq_);
   push_back(energy_terms_);
@@ -48,6 +52,18 @@ void Observables::init(input::Parameters& parms, const model::Model& model,
       obs.get().print_heading("T");
     }
   }
+
+  // build observable operators
+  if (magn_ || magn_sq_) {
+    magn_op_.init(model.basis(), "S(i)");
+  }
+  if (potts_magn_ || potts_magn_sq_) {
+    potts_magn_op_.init(model.basis(), "S(i)");
+  }
+  if (strain_ || strain_sq_) {
+    strain_op_.init(model.basis(), "sigma(i)");
+  }
+
 }
 
 int ScalarObservable::print_heading(const std::string& xvar_name) 

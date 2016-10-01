@@ -25,6 +25,7 @@ public:
   ~RandomNumber() {};
   void set_site_generator(const unsigned& min, const unsigned& max);
   void add_state_generator(const unsigned& site_type, const unsigned& min, const unsigned& max);
+  void seed(const int& seed_type);
   void time_seed(void);
   //unsigned random_idx(const unsigned& site_type) {return state_dist_map[site_type](*this); }
   unsigned random_idx(const unsigned& site_type) { return state_generators[site_type](*this); }
@@ -34,7 +35,7 @@ public:
 private:
   using int_dist = std::uniform_int_distribution<unsigned>;
   using myclock = std::chrono::high_resolution_clock;
-  unsigned seed_type_;
+  int seed_type_;
   //std::map<unsigned, int_dist> site_dist; // there will be only one item here
   int_dist site_generator; // there will be only one item here
   //std::map<unsigned, int_dist> state_dist_map;

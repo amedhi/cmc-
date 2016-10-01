@@ -17,6 +17,7 @@
 #include "../lattice/lattice.h"
 #include "../model/model.h"
 #include "../mcdata/mcdata.h"
+#include "observable_operator.h"
 
 namespace mc {
 
@@ -90,26 +91,36 @@ public:
   ~Observables() {}
   void init(input::Parameters& parms, const model::Model& model, 
     void (&print_copyright)(std::ostream& os));
-  inline ScalarObservable& magn(void) { return magn_; }
-  inline ScalarObservable& magn_sq(void) { return magn_sq_; }
   inline ScalarObservable& energy(void) { return energy_; }
   inline ScalarObservable& energy_sq(void) { return energy_sq_; }
+  inline ScalarObservable& magn(void) { return magn_; }
+  inline ScalarObservable& magn_sq(void) { return magn_sq_; }
+  inline ScalarObservable& potts_magn(void) { return potts_magn_; }
+  inline ScalarObservable& potts_magn_sq(void) { return potts_magn_sq_; }
   inline ScalarObservable& strain(void) { return strain_; }
   inline ScalarObservable& strain_sq(void) { return strain_sq_; }
   inline VectorObservable& energy_terms(void) { return energy_terms_; }
   inline VectorObservable& energy_terms_sq(void) { return energy_terms_sq_; }
+  inline SiteObsOperator& magn_op(void) { return magn_op_; } 
+  inline SiteObsOperator& potts_magn_op(void) { return potts_magn_op_; } 
+  inline SiteObsOperator& strain_op(void) { return strain_op_; } 
   //const bool& need_energy(void) { return energy_.on(); }
   void reset(void) { for (auto& obs : *this) obs.get().reset(); }
   void print(const double& xvar) { for (auto& obs : *this) obs.get().print_result(xvar); }
 private:
-  ScalarObservable magn_;
-  ScalarObservable magn_sq_;
   ScalarObservable energy_;
   ScalarObservable energy_sq_;
+  ScalarObservable magn_;
+  ScalarObservable magn_sq_;
+  ScalarObservable potts_magn_;
+  ScalarObservable potts_magn_sq_;
   ScalarObservable strain_;
   ScalarObservable strain_sq_;
   VectorObservable energy_terms_;
   VectorObservable energy_terms_sq_;
+  SiteObsOperator magn_op_;
+  SiteObsOperator potts_magn_op_;
+  SiteObsOperator strain_op_;
 };
 
 

@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <Eigen/Core>
 #include "../model/hamiltonian_term.h"
+#include "../model/model.h"
 #include "sitebasisstate.h"
 
 namespace mc {
@@ -34,8 +35,6 @@ public:
   { return operator[](state.type()).matrix_element(state.idx()); }
 private:
 };
-
-
 
 
 } // end namespace mc

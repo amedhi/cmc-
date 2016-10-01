@@ -22,6 +22,11 @@ RandomNumber::RandomNumber(const unsigned& seed_type)
   for (auto& g : state_generators) g = int_dist(-1,-1);
 }
 
+void RandomNumber::seed(const int& seed_type) {
+  seed_type_ = seed_type;
+  if (seed_type_==1) time_seed();
+} 
+
 void RandomNumber::time_seed(void) 
 {
   myclock::time_point now = myclock::now();
