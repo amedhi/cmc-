@@ -7,7 +7,7 @@ Build
 
 There are two dependencies - Boost and Eigen C++. You will also need 
 latest C++ compilers as the code contains many C++11 features. It works with
-latest g++ and clang++. It should work with others also. See at the Makefile.
+latest g++ and clang++. It should work with others also. See the Makefile.
 
 Usage
 -----
