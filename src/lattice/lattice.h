@@ -15,9 +15,9 @@
 #include <set>
 #include <stdexcept>
 #include "../scheduler/task.h"
-#include "../constants.h"
 #include <Eigen/Dense>
 #include <boost/graph/adjacency_list.hpp>
+#include "constants.h"
 
 namespace lattice {
 

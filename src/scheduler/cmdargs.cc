@@ -6,14 +6,14 @@
 * Last Modified by:   Amal Medhi, amedhi@macbook
 * Last Modified time: 2016-03-18 00:37:48
 *----------------------------------------------------------------------------*/
-// File: cmdopts.cpp 
+// File: cmdargs.cpp 
 // Class definitions for handling command line arguments
 
 //#include <boost/filesystem.hpp>
 #include <iostream>
 #include <string>
-#include "cmdargs.h"
 #include "optionparser.h"
+#include "cmdargs.h"
 
 namespace scheduler {
 

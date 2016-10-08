@@ -19,12 +19,11 @@
 #include "../lattice/graph.h"
 #include "../model/model.h"
 #include "sitebasisstate.h"
-#include "observables.h"
-#include "observable_operator.h"
+#include "../observable/observables.h"
+#include "../observable/observable_operator.h"
 
 namespace mc {
 
-//class Simulator : public std::vector<SiteState>
 class Simulator : public lattice::graph::LatticeGraph, public model::Model, 
                   public scheduler::Worker 
 {
@@ -34,13 +33,15 @@ public:
   //Simulator() {};
   Simulator(input::Parameters& parms); 
   ~Simulator() {}
-  void start(input::Parameters& parms);
-  void run(void) {} 
-  void finish(void) {} 
-  void dostep(void) {} 
-  void halt(void) {} 
+  using Model::update_parameters;
+  void start(input::Parameters& parms) override;
+  void run(void) override {} 
+  void finish(void) override {} 
+  void dostep(void) override {} 
+  void halt(void) override {} 
   static void print_copyright(std::ostream& os);
-private:
+
+protected:
   RandomNumber rng;
   std::vector<SiteBasisState> state;
   std::array<Eigen::MatrixXd, lattice::MAX_BOND_TYPES> boltzmann_table;
@@ -62,11 +63,11 @@ private:
   void init_state_random(void);
   void init_boltzmann_table(void);
   void update_state_metropolis(void);
-  void do_measurements(void);
-  mc::VectorData get_energy(void);
-  double get_magnetization(void);
-  double get_potts_magnetization(void);
-  double get_strain(void);
+  virtual void do_measurements(void);
+  virtual mc::VectorData get_energy(void);
+  virtual double get_magnetization(void);
+  virtual double get_potts_magnetization(void);
+  virtual double get_strain(void);
 };
 
 

@@ -14,11 +14,12 @@ input.*
 res_*.data
 res_*.txt
 
-
 # ignore the sublime workspace file
 *.sublime-workspace
 
 # others
 *.sublime-workspace
+root_dir.mk
 check/*
+build/*
 expression/shunting_yeard/*

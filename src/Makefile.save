@@ -1,0 +1,170 @@
+#-------------------------------------------------------------
+# Makefile for cmc++ library
+#-------------------------------------------------------------
+
+include ../this_dir.mk
+include ../options.mk
+
+#--------------------------Source files-----------------------
+CMC_SRCS = scheduler/cmdargs.cc 
+CMC_SRCS+= scheduler/inputparams.cc 
+CMC_SRCS+= scheduler/taskparams.cc 
+CMC_SRCS+= scheduler/worker.cc 
+CMC_SRCS+= scheduler/master_scheduler.cc
+CMC_SRCS+= scheduler/scheduler.cc
+CMC_SRCS+= expression/expression.cc 
+CMC_SRCS+= expression/tokens.cc 
+CMC_SRCS+= expression/functions.cc
+CMC_SRCS+= expression/objects.cc
+CMC_SRCS+= lattice/lattice.cc
+CMC_SRCS+= lattice/latticelibrary.cc
+CMC_SRCS+= lattice/graph.cc
+CMC_SRCS+= model/qn.cc
+CMC_SRCS+= model/quantum_operator.cc
+CMC_SRCS+= model/sitebasis.cc
+CMC_SRCS+= model/hamiltonian_term.cc
+CMC_SRCS+= model/model.cc
+CMC_SRCS+= model/modellibrary.cc
+CMC_SRCS+= observable/observable_operator.cc
+CMC_SRCS+= observable/observables.cc
+CMC_SRCS+= montecarlo/random.cc
+CMC_SRCS+= montecarlo/measurement.cc
+CMC_SRCS+= montecarlo/simulator.cc
+#---------------------------Headers---------------------------
+CMC_HDRS = scheduler/optionparser.h scheduler/cmdargs.h \
+           scheduler/inputparams.h scheduler/worker.h scheduler/task.h \
+           scheduler/scheduler.h \
+           expression/expression.h expression/shunting_yard.h \
+           expression/tokens.h expression/functions.h expression/objects.h \
+           expression/pack.h \
+           lattice/constants.h lattice/lattice.h lattice/graph.h \
+           model/qn.h model/sitebasis.h model/modelparams.h \
+           model/hamiltonian_term.h model/model.h \
+           observable/mcdata.h observable/observable_operator.h \
+           observable/observables.h \
+           simulator/random.h simulator/sitebasisstate.h \
+           simulator/simulator.h 
+#-------------------------------------------------------------
+
+CXXFLAGS= $(CMC_INCLUDEFLAGS) $(OPTIMIZATIONS) 
+#CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM) -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
+
+OBJECTS= $(patsubst %.cc,%.o, $(CMC_SRCS))
+#GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(CMC_SRCS))
+
+.SUFFIXES: .cc $(SUFFIXES)
+
+%.o: %.cc
+	@echo "Compiling cmc++/$< with optimizations"
+	$(eval COMMAND = $(CXX) -c $(CXXFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
+
+.debug_objs/%.o: %.cc
+	@echo "Compiling itensor/$< in debug mode"
+	$(eval COMMAND = $(CXX) -c $(CXXGFLAGS) -o $@ $<)
+	@$(COMMAND) || (echo "Failure while executing command: $(COMMAND)" && exit 1)
+
+# install: build debug
+install: build 
+
+libcmc++.a: $(OBJECTS)
+	@echo "Building static library $(CMC_LIBDIR)/libcmc++.a"
+	@ar -rv $(CMC_LIBDIR)/libcmc++.a $(OBJECTS)
+	@ranlib $(CMC_LIBDIR)/libcmc++.a
+
+libitensor-g.a: mkdebugdir $(GOBJECTS)
+	@echo "Building static library $(ITENSOR_LIBDIR)/libitensor-g.a"
+	@ar r $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
+	@ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
+
+touch_all_headers:
+	@touch all.h
+	@touch all_basic.h
+	@touch all_mps.h
+
+#build: libitensor.a touch_all_headers
+build: libcmc++.a 
+
+debug: libitensor-g.a touch_all_headers
+
+mkdebugdir:
+	@mkdir -p .debug_objs
+	@mkdir -p .debug_objs/util
+	@mkdir -p .debug_objs/tensor
+	@mkdir -p .debug_objs/itdata
+	@mkdir -p .debug_objs/mps
+
+clean:	
+	@rm -rf *.o src/*.o libcmc++.a 
+
+#---------------------detailed dependencies-------------------
+scheduler/cmdargs.o: scheduler/optionparser.h scheduler/cmdargs.h
+scheduler/inputparams.o: scheduler/inputparams.h
+scheduler/taskparams.o: scheduler/inputparams.h
+scheduler/worker.o: scheduler/worker.h scheduler/inputparams.h
+scheduler/master_scheduler.o: scheduler/scheduler.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h \
+ scheduler/cmdargs.h scheduler/optionparser.h
+scheduler/scheduler.o: scheduler/scheduler.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h \
+ scheduler/cmdargs.h scheduler/optionparser.h
+expression/token.o : expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h expression/pack.h \
+ expression/functions.h expression/tokens.h
+expression/objects.o : expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h expression/pack.h \
+ expression/functions.h expression/objects.h expression/functions.h
+expression/functions.o : expression/./shunting_yard.h \
+ expression/tokens.h expression/objects.h expression/pack.h \
+ expression/functions.h expression/functions.h
+expression/expression.o : expression/expression.h \
+ expression/shunting_yard.h expression/tokens.h expression/objects.h \
+ expression/pack.h expression/functions.h
+lattice/lattice.o: lattice/lattice.h scheduler/task.h scheduler/worker.h \
+ scheduler/inputparams.h lattice/constants.h
+lattice/latticelibrary.o: lattice/lattice.h scheduler/task.h \
+ scheduler/worker.h scheduler/inputparams.h lattice/constants.h
+lattice/graph.o: lattice/graph.h lattice/lattice.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h lattice/constants.h
+model/qn.o: model/qn.h
+model/quantum_operator.o : model/quantum_operator.h \
+ model/qn.h expression/expression.h expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h expression/pack.h \
+ expression/functions.h
+model/sitebasis.o: model/sitebasis.h model/qn.h model/quantum_operator.h
+hamiltonian_term.o: expression/expression.h expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h expression/pack.h \
+ expression/functions.h model/hamiltonian_term.h model/sitebasis.h model/qn.h \
+ model/quantum_operator.h model/modelparams.h lattice/lattice.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h lattice/constants.h
+model.o: model/model.h model/../lattice/lattice.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h \
+ lattice/constants.h model/sitebasis.h model/qn.h model/quantum_operator.h \
+ model/hamiltonian_term.h model/modelparams.h
+modellibrary.o: model/model.h lattice/lattice.h scheduler/task.h \
+ scheduler/worker.h scheduler/inputparams.h lattice/constants.h \
+ model/sitebasis.h model/qn.h model/quantum_operator.h \
+ model/hamiltonian_term.h model/modelparams.h
+observable_operator.o: observable/observable_operator.h \
+ model/hamiltonian_term.h model/sitebasis.h model/qn.h \
+ model/quantum_operator.h model/modelparams.h \
+ lattice/lattice.h scheduler/task.h scheduler/worker.h \
+ scheduler/inputparams.h lattice/constants.h model/model.h \
+ model/hamiltonian_term.h montecarlo/sitebasisstate.h \
+ expression/expression.h expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h \
+ expression/pack.h expression/functions.h
+observables.o: observable/observables.h observable/observable_operator.h \
+ model/hamiltonian_term.h model/sitebasis.h model/qn.h \
+ model/quantum_operator.h model/modelparams.h \
+ lattice/lattice.h scheduler/task.h scheduler/worker.h \
+ scheduler/inputparams.h lattice/constants.h model/model.h \
+ model/hamiltonian_term.h montecarlo/sitebasisstate.h \
+ expression/expression.h expression/shunting_yard.h \
+ expression/tokens.h expression/objects.h \
+ expression/pack.h expression/functions.h
+random.o: montecarlo/random.h lattice/lattice.h \
+ scheduler/task.h scheduler/worker.h scheduler/inputparams.h \
+ lattice/constants.h 
+measurement.o: $(CMC_HDRS)
+simulator.o: $(CMC_HDRS)

@@ -16,7 +16,7 @@
 #include "../scheduler/inputparams.h"
 #include "../lattice/lattice.h"
 #include "../model/model.h"
-#include "../mcdata/mcdata.h"
+#include "mcdata.h"
 #include "observable_operator.h"
 
 namespace mc {

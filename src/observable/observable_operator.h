@@ -13,7 +13,7 @@
 #include <Eigen/Core>
 #include "../model/hamiltonian_term.h"
 #include "../model/model.h"
-#include "sitebasisstate.h"
+#include "../montecarlo/sitebasisstate.h"
 
 namespace mc {
 
