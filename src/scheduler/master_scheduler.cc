@@ -22,6 +22,7 @@ MasterScheduler::MasterScheduler(int argc, const char *argv[], const AbstractTas
       input.init_task_parameters(parms);
       // set values for the first task to construct the worker
       input.set_task_parameters(parms, 0);
+      std::cout << " starting..." << std::endl;
       theWorker = theTask.make_worker(parms);
       valid_ = true;
     }
@@ -32,7 +33,7 @@ int MasterScheduler::run()
 {
   if (!valid_) return -1;
   auto start_time = std::chrono::steady_clock::now();
-  std::cout << " starting..." << std::endl;
+  //std::cout << " starting..." << std::endl;
   for (unsigned task=0; task<task_size; ++task) {
     //------------ timing -------------
     auto tp = std::chrono::system_clock::now();

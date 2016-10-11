@@ -1,6 +1,6 @@
 # Makefile options
-include ../root_dir.mk # must be included first
-include ../options.mk
+include ../../root_dir.mk # must be included first
+include ../../options.mk
 
 CXX = $(CMC_CXX)
 CXXFLAGS = $(CMC_CXXFLAGS)
@@ -35,7 +35,7 @@ clean:
 	
 .PHONY: xclean
 xclean:
-	rm -f jobinfo* res_*.txt
+	rm -f $(TAGT) jobinfo* res_*.txt
 
 
 
