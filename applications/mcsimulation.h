@@ -5,8 +5,9 @@
 *----------------------------------------------------------------------------*/
 #ifndef MCSIMULATION_H
 #define MCSIMULATION_H
-#include <montecarlo/simulator.h>
-//#include <cmc++/cmc.h>
+#include <map>
+#include <string>
+#include <cmc/simulation.h>
 
 class MCSimulation : public mc::Simulator
 {
@@ -16,6 +17,7 @@ public:
   void start(input::Parameters& parms);
 private:
   void do_measurements(void);
+  std::map<std::string, double> print_parms;
 };
 
 

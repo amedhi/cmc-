@@ -29,16 +29,14 @@ ifneq ($(BOOST_INCLUDE), $(EIGEN_INCLUDE))
 INCLUDE += $(EIGEN_INCLUDE)
 endif
 
-CMC_CXXBFLAGS= $(OPTFLAGS) $(INCLUDE)
+CMC_CXXBFLAGS= $(CMC_OPTFLAGS) $(INCLUDE)
 #-------------------------------------------------------------
-# Using the cmc++ lib
-# 4. Other makefile variables
+# 4. Where to put the 'cmc' library & the includes
 PREFIX=$(PROJECT_ROOT)
 BUILD_DIR=$(PREFIX)/build
 CMC_LIBDIR=$(PREFIX)/lib
-CMC_INCLDIR=$(PREFIX)/include
-CMC_LIB = -lcmc++
-CMC_CXXFLAGS= $(OPTFLAGS) $(INCLUDE) -I$(CMC_INCLDIR)
+CMC_INCLUDE=$(PREFIX)/include
+CMC_CXXFLAGS= $(CMC_OPTFLAGS) $(INCLUDE) -I$(CMC_INCLUDE)
 CMC_LDFLAGS=$(BOOST_LDFLAGS) -L$(CMC_LIBDIR)
-CMC_LIBS=$(BOOST_LIBS) $(CMC_LIB)
+CMC_LIBS=$(BOOST_LIBS) -lcmc++
 #-------------------------------------------------------------

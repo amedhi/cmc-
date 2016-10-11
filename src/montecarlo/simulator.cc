@@ -44,10 +44,60 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
 
   // observables
   observables.init(parms, *this, print_copyright);
+  // extra consideration for energy & magnetization
+  need_energy = false;
+  if (observables.energy_terms() || observables.energy() || observables.energy_sq()) {
+    energy_terms.resize(num_total_terms());
+    need_energy = true;
+  }
+  if (observables.energy_terms_sq()) {
+    energy_terms_sq.resize(num_total_terms());
+    need_energy = true;
+  }
+  need_magn = false;
+  if (observables.magn() || observables.magn_sq() || 
+    observables.potts_magn() || observables.potts_magn_sq()) {
+    need_magn = true;
+  }
 }
 
 void Simulator::start(input::Parameters& parms) 
 {
+  // this function must be override
+  throw std::logic_error("Simulator::start: You must override this function");
+
+  //Model::update_parameters(parms);
+  //// set variable parameters
+  //T = parms.set_value("T", 1.0);
+  //kB = parms.set_value("kB", 1.0);
+  //beta = 1.0/(kB*T);
+  //// values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
+  //init_boltzmann_table();
+  //// observables
+  //observables.reset();
+  ///*-----------------Simulation START-----------------*/
+  //// initial state
+  //init_state_random();
+  //// warmup runs
+  //for (int i=0; i<warmup; ++i) update_state_metropolis();
+  //// measurement
+  //int count = 0;
+  //int num_measurement = 0;
+  //while (num_measurement != measure_samples) {
+  //  update_state_metropolis();
+  //  if (count++ == min_interval) {
+  //    // make measurements
+  //    count = 0;
+  //    num_measurement++;
+  //    do_measurements();
+  //  }
+  //}
+  //// output
+  //observables.print(T);
+  /*-----------------Simulation END-----------------*/
+}
+
+void Simulator::update_parameters(input::Parameters& parms) {
   // update model parameters
   Model::update_parameters(parms);
 
@@ -58,62 +108,100 @@ void Simulator::start(input::Parameters& parms)
 
   // values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
   init_boltzmann_table();
-
-  // observables
-  observables.reset();
-
-  /*-----------------Simulation START-----------------*/
-  // initial state
-  init_state_random();
-  // warmup runs
-  for (int i=0; i<warmup; ++i) update_state_metropolis();
-  // measurement
-  int count = 0;
-  int num_measurement = 0;
-  while (num_measurement != measure_samples) {
-    update_state_metropolis();
-    if (count++ == min_interval) {
-      // make measurements
-      count = 0;
-      num_measurement++;
-      do_measurements();
-    }
-  }
-  // output
-  observables.print(T);
-  /*-----------------Simulation END-----------------*/
 }
 
-// measurements
-inline void Simulator::do_measurements(void)
+/*----------------------Energy-----------------------*/
+inline mc::VectorData Simulator::get_energy(void) const
 {
-  // energy
-  if (observables.energy_terms()) {
-    observables.energy_terms() << get_energy();
+  unsigned num_terms = num_total_terms();
+  mc::VectorData energy(num_terms);
+  for (unsigned i=0; i<num_terms; ++i) energy(i) = 0.0;
+  // bond energies
+  for (auto b=bonds_begin(); b!=bonds_end(); ++b) {
+    unsigned type = bond_type(b);
+    auto src = source(b);
+    auto tgt = target(b);
+    state_idx src_idx = state[site(src)].idx();
+    state_idx tgt_idx = state[site(tgt)].idx();
+    unsigned term = 0;
+    for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
+      double m = bterm->matrix_element(type, src_idx, tgt_idx);
+      double c = bterm->coupling(type);
+      //std::cout << "bond: " << " " << m << std::endl;
+      energy[term++] += m * c;
+    }
+  }
+  // site energies
+  for (const auto& s : state) {
+    unsigned term = num_bondterms();
+    for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
+      double m = sterm->matrix_element(s.type(), s.idx());
+      double c = sterm->coupling(s.type());
+      energy[term++] += m * c;
+    }
+  }
+  // energy per site
+  return energy/num_sites();
+}
+
+/*----------------------Ising magnetization-----------------------*/
+inline double Simulator::get_magnetization(void)
+{
+  double ms = 0;
+  for (const auto& s : state) {
+    ms += magn_op.apply(s);
+  }
+  return std::abs(ms)/num_sites();
+}
+
+/*----------------------Potts magnetization-----------------------*/
+inline double Simulator::get_potts_magnetization(void)
+{
+  unsigned num_sitetypes = basis().size();
+  std::vector<std::multiset<int> > lattice_spins(num_sitetypes);
+  std::vector<std::set<int> > site_spins(num_sitetypes);
+
+  // spin values for a sites
+  for (unsigned i=0; i<num_sitetypes; ++i) {
+    for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
+      SiteBasisState state(i, j, sitebasis_dimension(i)-1); 
+      int spin = std::nearbyint(magn_op.apply(state));
+      site_spins[i].insert(spin);
+    }
+  }
+
+  // set of spin values for all the sites in the lattice
+  for (const auto& s : state) {
+    int spin = std::nearbyint(magn_op.apply(s));
+    lattice_spins[s.type()].insert(spin);
   }
 
   // magnetization
-  if (observables.magn() || observables.magn_sq()) {
-    double x = get_magnetization();
-    if (observables.magn()) observables.magn() << x;
-    if (observables.magn_sq()) observables.magn_sq() << x*x;
+  double ms = 0;
+  for (unsigned i=0; i<num_sitetypes; ++i) {
+    int q = site_spins[i].size();
+    int Nmax = 0;
+    for (const auto& s : site_spins[i]) {
+      int count = lattice_spins[i].count(s);
+      if (Nmax < count) Nmax = count;
+    }
+    ms += static_cast<double>(q*Nmax - lattice_spins[i].size())/(q-1);
   }
-
-  // Potts magnetization
-  if (observables.potts_magn() || observables.potts_magn_sq()) {
-    double x = get_potts_magnetization();
-    if (observables.potts_magn()) observables.potts_magn() << x;
-    if (observables.potts_magn_sq()) observables.potts_magn_sq() << x*x;
-  }
-
-  // strain
-  if (observables.strain() || observables.strain_sq()) {
-    double x = get_strain();
-    if (observables.strain()) observables.strain() << x;
-    if (observables.strain_sq()) observables.strain_sq() << x * x;
-  }
+  return ms/num_sites();
 }
 
+/*----------------------Strain-----------------------*/
+inline double Simulator::get_strain(void)
+{
+  double ms = 0;
+  for (const auto& s : state) {
+    ms += strain_op.apply(s);
+  }
+  return std::abs(ms)/num_sites();
+}
+
+
+/*------------------random initial state----------------*/
 void Simulator::init_state_random(void)
 {
   // random initial state
@@ -201,6 +289,50 @@ void Simulator::print_copyright(std::ostream& os)
   os << "#" << "          (c) Amal Medhi <amedhi@iisertvm.ac.in>\n"; 
   os << "#" << std::string(72,'-') << "\n";
 }
+
+// measurements
+/*inline void Simulator::do_measurements(void)
+{
+  // energy
+  if (need_energy) {
+    get_energy(energy_terms);
+    if (observables.energy_terms()) {
+      observables.energy_terms() << energy_terms;
+    }
+    if (observables.energy()) {
+      double e = energy_terms.sum();
+      observables.energy() << e;
+    }
+    if (observables.energy_sq()) {
+      double e = energy_terms.sum();
+      observables.energy_sq() << e*e;
+    }
+    if (observables.energy_terms_sq()) {
+      observables.energy_terms_sq() << energy_terms.square();
+    }
+  }
+
+  // magnetization
+  if (observables.magn() || observables.magn_sq()) {
+    double x = get_magnetization();
+    if (observables.magn()) observables.magn() << x;
+    if (observables.magn_sq()) observables.magn_sq() << x*x;
+  }
+
+  // Potts magnetization
+  if (observables.potts_magn() || observables.potts_magn_sq()) {
+    double x = get_potts_magnetization();
+    if (observables.potts_magn()) observables.potts_magn() << x;
+    if (observables.potts_magn_sq()) observables.potts_magn_sq() << x*x;
+  }
+
+  // strain
+  if (observables.strain() || observables.strain_sq()) {
+    double x = get_strain();
+    if (observables.strain()) observables.strain() << x;
+    if (observables.strain_sq()) observables.strain_sq() << x * x;
+  }
+}*/
 
 
 } // end namespace basis

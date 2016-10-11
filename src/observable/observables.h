@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <functional>
 #include <stdexcept>
 #include <fstream>
@@ -17,7 +18,7 @@
 #include "../lattice/lattice.h"
 #include "../model/model.h"
 #include "mcdata.h"
-#include "observable_operator.h"
+//#include "observable_operator.h"
 
 namespace mc {
 
@@ -31,8 +32,8 @@ public:
   ~ObservableBase() { fs_.close(); }
   virtual void init(input::Parameters& parms); 
   virtual void reset(void) {}
-  virtual int print_heading(const std::string& xvar_name) { return -1; }
-  virtual int print_result(const double& xvar) { return -1; } 
+  virtual int print_heading(const std::map<std::string, double> xparms) { return -1; }
+  virtual int print_result(const std::map<std::string, double> xparms) { return -1; }
   inline const bool& is_on(void) const { return onoff_; }
   bool& state(void) { return onoff_; }
   void open_file(const std::string& fname) { if (onoff_) fs_.open(fname); }
@@ -55,8 +56,8 @@ public:
   ~ScalarObservable() {}
   void init(input::Parameters& parms) override; 
   inline void operator<<(const double& data) { data_ << data; }
-  int print_heading(const std::string& xvar_name) override;
-  int print_result(const double& xvar) override; 
+  int print_heading(const std::map<std::string, double> xparms) override;
+  int print_result(const std::map<std::string, double> xparms) override;
   void reset(void) override { if (is_on()) data_.clear(); }
   operator int(void) const { return is_on(); }
 private:
@@ -73,8 +74,8 @@ public:
     { size_=size; elem_names_=elem_names; }
   void init(input::Parameters& parms) override; 
   inline void operator<<(const VectorData& data) { data_ << data; }
-  int print_heading(const std::string& xvar_name) override;
-  int print_result(const double& xvar) override; 
+  int print_heading(const std::map<std::string, double> xparms) override;
+  int print_result(const std::map<std::string, double> xparms) override;
   void reset(void) override { if (is_on()) data_.clear(); }
   operator int(void) const { return is_on(); }
   const unsigned& size(void) const { return size_; }
@@ -101,12 +102,17 @@ public:
   inline ScalarObservable& strain_sq(void) { return strain_sq_; }
   inline VectorObservable& energy_terms(void) { return energy_terms_; }
   inline VectorObservable& energy_terms_sq(void) { return energy_terms_sq_; }
-  inline SiteObsOperator& magn_op(void) { return magn_op_; } 
-  inline SiteObsOperator& potts_magn_op(void) { return potts_magn_op_; } 
-  inline SiteObsOperator& strain_op(void) { return strain_op_; } 
-  //const bool& need_energy(void) { return energy_.on(); }
   void reset(void) { for (auto& obs : *this) obs.get().reset(); }
-  void print(const double& xvar) { for (auto& obs : *this) obs.get().print_result(xvar); }
+  //inline SiteObsOperator& magn_op(void) { return magn_op_; } 
+  //inline SiteObsOperator& potts_magn_op(void) { return potts_magn_op_; } 
+  //inline SiteObsOperator& strain_op(void) { return strain_op_; } 
+  //void set_magn_op(const std::string& op, const std::string& site="i"); 
+  //void set_strain_op(const std::string& op, const std::string& site="i"); 
+  //const bool& need_energy(void) { return energy_.on(); }
+  void as_function_of(const std::map<std::string, double> xparms);
+  void as_function_of(const std::string& xparm_name);
+  void print(const std::map<std::string, double> xparms); 
+  void print(const double& xparm_val);
 private:
   ScalarObservable energy_;
   ScalarObservable energy_sq_;
@@ -118,9 +124,12 @@ private:
   ScalarObservable strain_sq_;
   VectorObservable energy_terms_;
   VectorObservable energy_terms_sq_;
-  SiteObsOperator magn_op_;
-  SiteObsOperator potts_magn_op_;
-  SiteObsOperator strain_op_;
+  //SiteObsOperator magn_op_;
+  //SiteObsOperator potts_magn_op_;
+  //SiteObsOperator strain_op_;
+  //model::BasisDescriptor basis_;
+  unsigned num_xparms_{0};
+  std::map<std::string, double> single_xparm_;
 };
 
 

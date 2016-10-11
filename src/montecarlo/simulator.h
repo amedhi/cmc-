@@ -18,9 +18,9 @@
 #include "../lattice/lattice.h"
 #include "../lattice/graph.h"
 #include "../model/model.h"
-#include "sitebasisstate.h"
 #include "../observable/observables.h"
-#include "../observable/observable_operator.h"
+#include "sitebasisstate.h"
+#include "observable_operator.h"
 
 namespace mc {
 
@@ -58,13 +58,23 @@ protected:
 
   // observables
   Observables observables;
+  mc::VectorData energy_terms;
+  mc::VectorData energy_terms_sq;
+  SiteObsOperator magn_op;
+  SiteObsOperator strain_op;
+  bool need_energy{false};
+  bool need_magn{false};
 
   void init(void);
   void init_state_random(void);
   void init_boltzmann_table(void);
   void update_state_metropolis(void);
-  virtual void do_measurements(void);
-  virtual mc::VectorData get_energy(void);
+  void update_parameters(input::Parameters& parms);
+  void set_magn_op(const std::string& op, const std::string& site="i")
+   { magn_op.init(basis(), op, site); }
+  void set_strain_op(const std::string& op, const std::string& site="i")
+   { strain_op.init(basis(), op, site); }
+  virtual mc::VectorData get_energy(void) const;
   virtual double get_magnetization(void);
   virtual double get_potts_magnetization(void);
   virtual double get_strain(void);

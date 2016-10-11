@@ -24,10 +24,10 @@ CMC_SRCS+= model/sitebasis.cc
 CMC_SRCS+= model/hamiltonian_term.cc
 CMC_SRCS+= model/model.cc
 CMC_SRCS+= model/modellibrary.cc
-CMC_SRCS+= observable/observable_operator.cc
 CMC_SRCS+= observable/observables.cc
 CMC_SRCS+= montecarlo/random.cc
-CMC_SRCS+= montecarlo/measurement.cc
+CMC_SRCS+= montecarlo/observable_operator.cc
+#CMC_SRCS+= montecarlo/measurement.cc
 CMC_SRCS+= montecarlo/simulator.cc
 #-------------------------------------------------------------
 # Headers
@@ -40,10 +40,10 @@ CMC_HDRS=scheduler/optionparser.h scheduler/cmdargs.h \
          lattice/constants.h lattice/lattice.h lattice/graph.h \
          model/qn.h model/quantum_operator.h model/sitebasis.h model/modelparams.h \
          model/hamiltonian_term.h model/model.h \
-         observable/mcdata.h observable/observable_operator.h \
-         observable/observables.h \
+         observable/mcdata.h observable/observables.h \
          montecarlo/random.h montecarlo/sitebasisstate.h \
-         montecarlo/simulator.h 
+	 montecarlo/observable_operator.h montecarlo/simulator.h \
+	 simulation.h
 #-------------------------------------------------------------
 # Target
 TGT=$(CMC_LIBDIR)/libcmc++.a
@@ -60,6 +60,7 @@ DEPS=$(patsubst %.o,%.d,$(OBJS))
 # compiler flags
 CXXFLAGS= $(CMC_INCLUDEFLAGS) $(OPTIMIZATIONS) 
 
+CMC_INCLDIR=$(CMC_INCLUDE)/cmc
 INCL_HDRS = $(addprefix $(CMC_INCLDIR)/, $(CMC_HDRS))
 
 .PHONY: all

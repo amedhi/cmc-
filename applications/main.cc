@@ -1,5 +1,4 @@
 #include <iostream>
-#include <scheduler/scheduler.h>
 #include "mcsimulation.h"
 
 int main(int argc, const char *argv[])

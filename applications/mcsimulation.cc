@@ -7,20 +7,22 @@
 
 MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms) 
 {
+  // observables as functions of what?
+  observables.as_function_of("T");
+
+  // define your observable operators (other than energy)
+  if (need_magn) {
+    Simulator::set_magn_op("S(i)");
+  }
+  if (observables.strain() || observables.strain_sq()) {
+    Simulator::set_strain_op("sigma(i)");
+  }
 } 
 
 void MCSimulation::start(input::Parameters& parms)
 {
   // update model parameters
   Simulator::update_parameters(parms);
-
-  // set variable parameters
-  T = parms.set_value("T", 1.0);
-  kB = parms.set_value("kB", 1.0);
-  beta = 1.0/(kB*T);
-
-  // values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
-  Simulator::init_boltzmann_table();
 
   // observables
   observables.reset();
@@ -51,27 +53,41 @@ void MCSimulation::start(input::Parameters& parms)
 inline void MCSimulation::do_measurements(void)
 {
   // energy
-  if (observables.energy_terms()) {
-    observables.energy_terms() << get_energy();
+  if (need_energy) {
+    energy_terms = Simulator::get_energy();
+    if (observables.energy_terms()) {
+      observables.energy_terms() << energy_terms;
+    }
+    if (observables.energy()) {
+      double e = energy_terms.sum();
+      observables.energy() << e;
+    }
+    if (observables.energy_sq()) {
+      double e = energy_terms.sum();
+      observables.energy_sq() << e*e;
+    }
+    if (observables.energy_terms_sq()) {
+      observables.energy_terms_sq() << energy_terms.square();
+    }
   }
 
   // magnetization
   if (observables.magn() || observables.magn_sq()) {
-    double x = get_magnetization();
+    double x = Simulator::get_magnetization();
     if (observables.magn()) observables.magn() << x;
     if (observables.magn_sq()) observables.magn_sq() << x*x;
   }
 
   // Potts magnetization
   if (observables.potts_magn() || observables.potts_magn_sq()) {
-    double x = get_potts_magnetization();
+    double x = Simulator::get_potts_magnetization();
     if (observables.potts_magn()) observables.potts_magn() << x;
     if (observables.potts_magn_sq()) observables.potts_magn_sq() << x*x;
   }
 
   // strain
   if (observables.strain() || observables.strain_sq()) {
-    double x = get_strain();
+    double x = Simulator::get_strain();
     if (observables.strain()) observables.strain() << x;
     if (observables.strain_sq()) observables.strain_sq() << x*x;
   }

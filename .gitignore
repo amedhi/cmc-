@@ -14,7 +14,8 @@ input.*
 res_*.data
 res_*.txt
 
-# ignore the sublime workspace file
+# ignore the sublime file
+*.sublime-project
 *.sublime-workspace
 
 # others
