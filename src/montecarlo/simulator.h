@@ -34,7 +34,7 @@ public:
   Simulator(input::Parameters& parms); 
   ~Simulator() {}
   using Model::update_parameters;
-  void start(input::Parameters& parms) override;
+  int start(input::Parameters& parms) override;
   void run(void) override {} 
   void finish(void) override {} 
   void dostep(void) override {} 

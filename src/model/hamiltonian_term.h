@@ -19,16 +19,19 @@
 
 namespace model {
 
-class CouplingConstant : public std::unordered_map<unsigned, std::string>
+class CouplingConstant : public std::unordered_map<int, std::string>
 {
 public:
-  using super_type = std::unordered_map<unsigned, std::string>;
+  using super_type = std::unordered_map<int, std::string>;
   using iterator = super_type::iterator;
   using const_iterator = super_type::const_iterator;
   using value_type = std::pair<unsigned,std::string>;
 
   CouplingConstant() {}
   CouplingConstant(const std::string& expr); 
+  CouplingConstant(const value_type& type0, const value_type& type1={0,"_null_"}, 
+    const value_type& type2={0,"_null_"}, const value_type& type3={0,"_null_"}, 
+    const value_type& type4={0,"_null_"}, const value_type& type5={0,"_null_"});
   ~CouplingConstant() {}
   CouplingConstant& operator=(const std::string expr); 
   void create(const unsigned& num_type);
@@ -41,8 +44,10 @@ public:
   void clear_map(void) { super_type::clear(); } 
   const bool& valid(void) const { return valid_; } 
   const std::string& expression(const unsigned& type) const;
+
+  static const int global_type;
 private:
-  unsigned num_types_{0};
+  int num_types_{0}; 
   bool valid_{false};
 };
 

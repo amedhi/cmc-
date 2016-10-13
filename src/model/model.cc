@@ -19,20 +19,59 @@ unsigned Model::add_sitebasis(SiteBasis& sitebasis, const unsigned& type)
   return basis_.add_sitebasis(mapped_type,sitebasis); 
 }
 
+void Model::def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
+  const unsigned& tgt_type)
+{
+  unsigned mapped_btype, mapped_src_type, mapped_tgt_type;
+  // if the bondtype already exist
+  if (bondtypes_map_.find(btype) != bondtypes_map_.end()) 
+    throw std::range_error("Model::add_impurity_bond: 'bond type' already exists");
+  // if the sitetypes is not defined yet
+  if (sitetypes_map_.find(src_type) == sitetypes_map_.end()) 
+    throw std::range_error("Model::add_impurity_bond: 'src type' does not exist");
+  else mapped_src_type = sitetypes_map_.at(src_type);
+  if (sitetypes_map_.find(tgt_type) == sitetypes_map_.end()) 
+    throw std::range_error("Model::add_impurity_bond: 'tgt type' does not exist");
+  else mapped_tgt_type = sitetypes_map_.at(tgt_type);
+  // add the new bond type & its mapped value
+  impurity_bond_types_.push_back(btype);
+  mapped_btype = bondtypes_map_.size();
+  bondtypes_map_.insert({btype, mapped_btype});
+  // add to bond type-target types map
+  bond_sites_map_.insert({mapped_btype, 
+    std::make_pair(mapped_src_type, mapped_tgt_type)});
+}
+
+int Model::get_impurity_bondtype(void) const
+{
+  if (impurity_bond_types_.size()==1) return bondtypes_map_.at(impurity_bond_types_[0]);
+  // at present assume only one type of impurity bond 
+  return -1;
+}
+
 unsigned Model::add_siteterm(const std::string& name, const CouplingConstant& cc,
   const std::string& op_expr, const std::string& site)
 {
   // remap site type values in 'cc'
   CouplingConstant cc_remapped = cc;
   cc_remapped.clear_map();
-  for (auto it=cc.begin(); it!=cc.end(); ++it) {
-    unsigned sitetype = it->first;
-    auto it2=sitetypes_map_.find(sitetype);
-    if (it2!=sitetypes_map_.end()) {
-      unsigned mapped_type = it2->second;
-      cc_remapped.insert({mapped_type, it->second});
+  if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
+    // the 'cc' is implicitly defined for all types
+    std::string cc_expr = cc.begin()->second;
+    for (const auto& m : sitetypes_map_) {
+      cc_remapped.insert({m.second, cc_expr});
     }
-    else throw std::range_error("Model::add_siteterm: non-existent 'site type' specified");
+  }
+  else {
+    for (auto it=cc.begin(); it!=cc.end(); ++it) {
+      unsigned sitetype = it->first;
+      auto it2=sitetypes_map_.find(sitetype);
+      if (it2!=sitetypes_map_.end()) {
+        unsigned mapped_type = it2->second;
+        cc_remapped.insert({mapped_type, it->second});
+      }
+      else throw std::range_error("Model::add_siteterm: non-existent 'site type' specified");
+    }
   }
   unsigned num_sitetypes = sitetypes_map_.size();
   this->std::vector<SiteTerm>::push_back(SiteTerm(name, cc_remapped, op_expr, site, num_sitetypes));
@@ -45,14 +84,23 @@ unsigned Model::add_bondterm(const std::string& name, const CouplingConstant& cc
   // remap bond type values in 'cc'
   CouplingConstant cc_remapped = cc;
   cc_remapped.clear_map();
-  for (auto it=cc.begin(); it!=cc.end(); ++it) {
-    unsigned bondtype = it->first;
-    auto it2=bondtypes_map_.find(bondtype);
-    if (it2!=bondtypes_map_.end()) {
-      unsigned mapped_type = it2->second;
-      cc_remapped.insert({mapped_type, it->second});
+  if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
+    // the 'cc' is implicitly defined for all types
+    std::string cc_expr = cc.begin()->second;
+    for (const auto& m : sitetypes_map_) {
+      cc_remapped.insert({m.second, cc_expr});
     }
-    else throw std::range_error("Model::add_bondterm: non-existent 'site type' specified");
+  }
+  else {
+    for (auto it=cc.begin(); it!=cc.end(); ++it) {
+      unsigned bondtype = it->first;
+      auto it2=bondtypes_map_.find(bondtype);
+      if (it2!=bondtypes_map_.end()) {
+        unsigned mapped_type = it2->second;
+        cc_remapped.insert({mapped_type, it->second});
+      }
+      else throw std::range_error("Model::add_bondterm: non-existent 'site type' specified");
+    }
   }
   unsigned num_bondtypes = bondtypes_map_.size();
   std::vector<BondTerm>::push_back(BondTerm(name, cc_remapped, op_expr, src, tgt, num_bondtypes));
@@ -71,15 +119,15 @@ void Model::finalize(const lattice::Lattice& L)
   st_end_ = std::vector<SiteTerm>::cend();
   // finalize the bond terms
   // map each 'bondtype' to its 'src' & 'tgt' types
-  BondTerm::BondSiteMap bond_site_map;
+  /*BondTerm::BondSiteMap bond_site_map;
   for (unsigned i=0; i<L.num_unitcell_bonds(); ++i) {
     lattice::Bond b = L.unitcell_bond(i);
     lattice::Site src = L.unitcell_site(b.src_id());
     lattice::Site tgt = L.unitcell_site(b.tgt_id());
     bond_site_map.insert({b.type(), std::make_pair(src.type(), tgt.type())});
-  }
+  }*/
   for (auto it=std::vector<BondTerm>::begin(); it!=std::vector<BondTerm>::end(); ++it) {
-    it->build_matrix(basis_, bond_site_map); 
+    it->build_matrix(basis_, bond_sites_map_); 
     it->eval_coupling_constant(constants_, parms_); 
   }
   has_bondterm_ = (std::vector<BondTerm>::size()>0);

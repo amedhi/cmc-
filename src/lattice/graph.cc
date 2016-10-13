@@ -83,6 +83,7 @@ void LatticeGraph::construct_graph(void)
   //vertex_cellcord_map = get(&VertexProperties::cell_coord, g); 
 
   // add the edges
+  edge_types_set_.clear();
   edge_descriptor e;
   bool flag;
   vertex_descriptor source, target;
@@ -99,6 +100,7 @@ void LatticeGraph::construct_graph(void)
     //std::cout << "bond: " << vertex_index_map[source] << " --- " << vertex_index_map[target] << "\n";
     //std::cout << bonds[i].src_offset() << "\n";
     //std::cout << bonds[i].tgt_offset() << "\n\n";
+    edge_types_set_.insert(bonds[i].type());
   }
   num_edges_ = boost::num_edges(*this);
   boost::tie(ei_begin_, ei_end_) = boost::edges(*this);

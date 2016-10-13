@@ -63,6 +63,16 @@ public:
 
   // setter functions
   void construct(input::Parameters& parms); 
+  void change_type_value(const site_descriptor& v, const unsigned& new_val) 
+    { this->operator[](v).type = new_val; }
+  void change_type_value(const site_iterator& vi, const unsigned& new_val) 
+    { this->operator[](*vi).type = new_val; }
+  void change_type_value(const bond_iterator& ei, const unsigned& new_val) 
+    { this->operator[](*ei).type = new_val; }
+  void change_type_value(const out_bond_iterator& ei, const unsigned& new_val) 
+    { this->operator[](*ei).type = new_val; }
+  void change_type_value(const in_bond_iterator& ei, const unsigned& new_val) 
+    { this->operator[](*ei).type = new_val; }
 
   // getter functions
   const Lattice& lattice(void) { return lattice_; }
@@ -76,6 +86,7 @@ public:
   unsigned site(const site_iterator& vi) const { return static_cast<unsigned>(*vi); }
   unsigned site(const site_descriptor& v) const { return static_cast<unsigned>(v); }
   const std::set<unsigned>& site_types(void) const { return vertex_types_set_; } 
+  unsigned num_site_types(void) const { return vertex_types_set_.size(); } 
   const unsigned& site_type(const site_iterator& vi) const { return this->operator[](*vi).type; }
   const unsigned& site_type(const site_descriptor& v) const { return this->operator[](v).type; }
   const unsigned& site_uid(const site_iterator& vi) const { return this->operator[](*vi).uid; }
@@ -97,6 +108,8 @@ public:
   // edge accessors
   const bond_iterator& bonds_begin(void) const { return ei_begin_; }
   const bond_iterator& bonds_end(void) const { return ei_end_; }
+  const unsigned& num_bonds(void) const { return num_edges_; }
+  unsigned num_bond_types(void) const { return edge_types_set_.size(); } 
   const unsigned& bond_type(const bond_iterator& ei) const { return this->operator[](*ei).type; }
   const unsigned& bond_type(const out_bond_iterator& ei) const { return this->operator[](*ei).type; }
   const unsigned& bond_type(const in_bond_iterator& ei) const { return this->operator[](*ei).type; }
@@ -127,6 +140,7 @@ private:
   //boost::property_map<graph::Graph, unsigned VertexProperties::*>::type vertex_uid_map;
   //boost::property_map<graph::Graph, Vector3d VertexProperties::*>::type vertex_cellcord_map;
   std::set<unsigned> vertex_types_set_;
+  std::set<unsigned> edge_types_set_;
   lattice::Lattice lattice_;
 };
 

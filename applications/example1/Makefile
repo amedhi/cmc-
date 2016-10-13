@@ -26,11 +26,11 @@ $(TAGT) : $(OBJS)
 #-------------------------------------------------------
 .PHONY: clean
 clean:
-	rm -f *.o 
+	rm -f $(TAGT) *.o 
 	
 .PHONY: xclean
 xclean:
-	rm -f $(TAGT) jobinfo* res_*.txt
+	rm -f jobinfo* res_*.txt
 
 
 

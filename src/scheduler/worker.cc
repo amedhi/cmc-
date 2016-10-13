@@ -18,9 +18,10 @@ Worker::~Worker()
 {
 }
 
-void Worker::start(input::Parameters& p)
+int Worker::start(input::Parameters& p)
 {
   started_ = true;
+  return 0;
 }
 
 void Worker::run()

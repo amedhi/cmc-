@@ -9,8 +9,8 @@ LIBS = $(CMC_LIBS)
 
 #-------------------------------------------------------------
 # Source files
-SRCS = mcsimulation.cc main.cc
-HDRS = mcsimulation.h
+SRCS = mc_ni2mnx.cc main.cc
+HDRS = mc_ni2mnx.h
 #-------------------------------------------------------------
 # Target
 TAGT=a.out
@@ -25,8 +25,8 @@ $(TAGT) : $(OBJS)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 # detail dependencies
-mcsimulation.o : mcsimulation.cc  mcsimulation.h 
-main.o : main.cc  mcsimulation.h 
+mc_ni2mnx.o : mc_ni2mnx.cc  mc_ni2mnx.h 
+main.o : main.cc  mc_ni2mnx.h 
 
 #-------------------------------------------------------
 .PHONY: clean

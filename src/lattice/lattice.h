@@ -175,41 +175,6 @@ private:
 /*---------------spatial dimension type-----------------*/
 enum class boundary_type {open, periodic, antiperiodic};
 
-/*---------------Lattice class defintion-----------------*/
-
-/*
-// lattice graph objects
-namespace graph {
-
-// Vertex properties
-struct VertexProperties {
-  unsigned uid; // unitcell id
-  unsigned type; 
-  unsigned stype; // symmetry type
-  unsigned atomid; 
-  Vector3i bravindex;
-  Vector3d coord; 
-  Vector3d cell_coord;
-};
-
-// Edge properties
-struct EdgeProperties {
-  unsigned type; 
-  unsigned stype; 
-  int sign; 
-  Vector3d vector; 
-};
-
-using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
-              VertexProperties, EdgeProperties>;
-using vertex = boost::graph_traits<Graph>::vertex_descriptor;
-using edge = boost::graph_traits<Graph>::edge_descriptor;
-using vertex_iterator = boost::graph_traits<Graph>::vertex_iterator;
-using edge_iterator = boost::graph_traits<Graph>::edge_iterator;
-
-} // end namespace 'graph'
-*/
-
 class Lattice 
 {
 public:
@@ -255,6 +220,10 @@ public:
   const Bond& unitcell_bond(const unsigned& i) const { return unitcell.bond(i); }
   std::map<unsigned,unsigned> sitetypes_map(void) const { return unitcell.sitetypes_map(); }
   std::map<unsigned,unsigned> bondtypes_map(void) const { return unitcell.bondtypes_map(); }
+
+  // for lattices with doped impurities
+  //void add_new_bondtype(const unsigned& type);
+
 private:
   struct Extent {unsigned size; boundary_type bc; boundary_type periodicity;};
   enum Dimension {dim1, dim2, dim3};
@@ -280,13 +249,9 @@ private:
   unsigned num_layer_cells {1};
   unsigned num_total_sites {0};
 
-  /*
-  // graph data
-  graph::Graph g;
-  graph::vertex_iterator vi_begin, vi_end;
-  graph::edge_iterator ei_begin, ei_end;
-  boost::property_map<graph::Graph, boost::vertex_index_t>::type vertex_index;
-  */
+  // for lattices with impurities
+  std::vector<Site> impurity_sites_;
+  std::vector<Bond> impurity_bonds_;
 
   // helper functions
   int define_lattice(void); 

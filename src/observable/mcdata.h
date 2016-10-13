@@ -480,7 +480,7 @@ inline void mcdata<VectorData>::show_statistic(std::ostream& os) const
     os <<"bin-"<<std::setw(2)<<i++<<": "<< std::right<<std::setw(8)<<bin->num_samples(); 
     VectorData mean = bin->mean();
     VectorData stddev = bin->stddev();
-    for (unsigned n=0; n<mean.rows(); ++n) {
+    for (int n=0; n<mean.rows(); ++n) {
       os << std::scientific << std::uppercase << std::setw(14) << mean(n); 
       os << std::setw(6) << "(+/-) " << std::fixed << std::setw(10) << stddev(n); 
     }
@@ -520,7 +520,7 @@ inline std::ostream& operator<<(std::ostream& os, const mcdata<VectorData>& obs)
   os << "#" << std::string(36, '-') << "\n";
   auto mean = obs.mean();
   auto stddev = obs.stddev();
-  for (unsigned i=0; i<mean.rows(); ++i) {
+  for (int i=0; i<mean.rows(); ++i) {
     os << " ";
     os << scientific << setw(6) << i << setw(16) << mean(i); // << setw(6) << "(+/-)";
     os << fixed << setw(12) << stddev(i) << "\n";

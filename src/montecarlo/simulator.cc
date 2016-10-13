@@ -11,9 +11,10 @@
 
 namespace mc {
 
-Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
+Simulator::Simulator(input::Parameters& parms) 
+  : LatticeGraph(parms), Model(parms, LatticeGraph::lattice())
 {
-  Model::construct(LatticeGraph::lattice(), parms);
+  //Model::construct(LatticeGraph::lattice(), parms);
 
   // system state
   state.resize(num_sites());
@@ -61,7 +62,7 @@ Simulator::Simulator(input::Parameters& parms) : LatticeGraph(parms)
   }
 }
 
-void Simulator::start(input::Parameters& parms) 
+int Simulator::start(input::Parameters& parms) 
 {
   // this function must be override
   throw std::logic_error("Simulator::start: You must override this function");
@@ -95,6 +96,7 @@ void Simulator::start(input::Parameters& parms)
   //// output
   //observables.print(T);
   /*-----------------Simulation END-----------------*/
+  return 0;
 }
 
 void Simulator::update_parameters(input::Parameters& parms) {
@@ -246,39 +248,43 @@ void Simulator::init_boltzmann_table(void)
 {
   for (auto& mat : boltzmann_table) mat = Eigen::MatrixXd();
   // get bond types
-  for (unsigned i=0; i<lattice().num_unitcell_bonds(); ++i) {
-    lattice::Bond b = lattice().unitcell_bond(i);
-    lattice::Site src = lattice().unitcell_site(b.src_id());
-    lattice::Site tgt = lattice().unitcell_site(b.tgt_id());
-    unsigned src_dim = sitebasis_dimension(src.type());
-    unsigned tgt_dim = sitebasis_dimension(tgt.type());
+  unsigned btype, src_type, tgt_type;
+  //for (unsigned i=0; i<lattice().num_unitcell_bonds(); ++i) {
+  //  lattice::Bond b = lattice().unitcell_bond(i);
+  //  lattice::Site src = lattice().unitcell_site(b.src_id());
+  //  lattice::Site tgt = lattice().unitcell_site(b.tgt_id());
+  for (const auto& m : Model::bond_sites_map()) {
+    btype = m.first;
+    std::tie(src_type, tgt_type) = m.second;
+    unsigned src_dim = sitebasis_dimension(src_type);
+    unsigned tgt_dim = sitebasis_dimension(tgt_type);
     Eigen::MatrixXd exp_betaE(src_dim, tgt_dim);
     // energy for this two sites
     for (unsigned i=0; i<src_dim; ++i) {
       // siteterm for src site
       double E_src = 0.0;
       for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
-        double m = sterm->matrix_element(src.type(), i);
-        E_src += m * sterm->coupling(src.type());
+        double m = sterm->matrix_element(src_type, i);
+        E_src += m * sterm->coupling(src_type);
       }
       for (unsigned j=0; j<tgt_dim; ++j) {
         // siteterm for src site
         double E_tgt = 0.0;
         for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
-          double m = sterm->matrix_element(tgt.type(), j);
-          E_tgt += m * sterm->coupling(tgt.type());
+          double m = sterm->matrix_element(tgt_type, j);
+          E_tgt += m * sterm->coupling(tgt_type);
         }
         // bond energy
         double E_bond = 0.0;
         for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
-          double m = bterm->matrix_element(b.type(), i, j);
-          E_bond += m * bterm->coupling(b.type());
+          double m = bterm->matrix_element(btype, i, j);
+          E_bond += m * bterm->coupling(btype);
         }
         exp_betaE(i,j) = std::exp(-beta*(E_src+E_tgt+E_bond));
       }
     }
     // matrix built for this bond type
-    boltzmann_table[b.type()] = exp_betaE;
+    boltzmann_table[btype] = exp_betaE;
   }
 }
 

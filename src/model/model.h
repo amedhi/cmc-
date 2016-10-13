@@ -28,10 +28,10 @@ public:
   using siteterm_iterator = std::vector<SiteTerm>::const_iterator; 
   using bondterm_iterator = std::vector<BondTerm>::const_iterator; 
   Model() {}
-  Model(const lattice::Lattice& lattice, const input::Parameters& inputs)
-  { construct(lattice, inputs); }
+  Model(const input::Parameters& inputs, const lattice::Lattice& lattice)
+  { construct(inputs, lattice); }
   ~Model() {}
-  int construct(const lattice::Lattice& lattice, const input::Parameters& inputs);
+  int construct(const input::Parameters& inputs, const lattice::Lattice& lattice);
 
   unsigned add_sitebasis(SiteBasis& sitebasis, const unsigned& type=0);
   unsigned add_parameter(const std::string& pname, const double& defval, 
@@ -44,6 +44,9 @@ public:
     const std::string& op_expr, const std::string& site);
   unsigned add_bondterm(const std::string& name, const CouplingConstant& cc,
     const std::string& op_expr, const std::string& src, const std::string& tgt);
+  void def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
+    const unsigned& tgt_type); 
+  int get_impurity_bondtype(void) const;
 
   const BasisDescriptor& basis(void) const { return basis_; }
   const SiteBasis& site_basis(const unsigned& site_type) const { return basis_.at(site_type); }
@@ -65,11 +68,12 @@ public:
     { return std::vector<SiteTerm>::size()+std::vector<BondTerm>::size(); }
   void get_term_names(std::vector<std::string>& term_names) const;
   std::ostream& print_info(std::ostream& os) const { return os << info_str_.str(); }
+  const BondTerm::BondSiteMap& bond_sites_map(void) const { return bond_sites_map_; }
 
   //const SiteTerm& siteterm(const unsigned& i) const { return siteterms_[i]; };
   //const BondTerm& bondterm(const unsigned& i) const { return bondterms_[i]; };
 private:
-  int define_model(const lattice::Lattice& lattice, const input::Parameters& inputs);
+  int define_model(const input::Parameters& inputs, const lattice::Lattice& lattice);
   void finalize(const lattice::Lattice& lattice);
   void set_info_string(const lattice::Lattice& lattice); 
 
@@ -77,6 +81,9 @@ private:
   BasisDescriptor basis_;
   std::map<unsigned, unsigned> sitetypes_map_;
   std::map<unsigned, unsigned> bondtypes_map_;
+  BondTerm::BondSiteMap bond_sites_map_;  
+  std::vector<unsigned> impurity_bond_types_;
+
   bool has_siteterm_{false};
   bool has_bondterm_{false};
   siteterm_iterator st_begin_;

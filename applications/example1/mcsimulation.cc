@@ -7,13 +7,13 @@
 #include <string>
 #include <cmc/simulation.h>
 
-/*------The Simulation class to be derived from mc::Simulator-----*/
+/*------Your Simulation class to be derived from mc::Simulator-----*/
 class MCSimulation : public mc::Simulator
 {
 public:
   MCSimulation(input::Parameters& parms);
   ~MCSimulation() {}
-  void start(input::Parameters& parms);
+  int start(input::Parameters& parms);
 private:
   void do_measurements(void);
 };
@@ -22,7 +22,7 @@ private:
 // Constructor
 MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms) 
 {
-  // You need observables as functions of what?
+  // You need observables as function of what?
   observables.as_function_of("T");
 
   // Define your observable operators (other than energy)
@@ -37,13 +37,13 @@ MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms)
    int seed = parms.set_value("rng_seed", 0); 
    // 0 is the default value set in case the parameter "rng_seed" is not found
    // in the input file.
-   std::cout << "rng_seed = " << seed << std::endl;
+   // std::cout << "rng_seed = " << seed << std::endl;
 } 
 
 // Actual simulation inside this function
-void MCSimulation::start(input::Parameters& parms)
+int MCSimulation::start(input::Parameters& parms)
 {
-  // update model parameters
+  // update simulation parameters
   Simulator::update_parameters(parms);
 
   // observable values must be reset before simulation start
@@ -68,15 +68,16 @@ void MCSimulation::start(input::Parameters& parms)
   }
   // print the results for calculated observables
   observables.print(T);
-  // done!
   /*-----------------Simulation END-----------------*/
+  // done!
+  return 0;
 }
 
 // Measurement of observables
 inline void MCSimulation::do_measurements(void)
 {
   // energy
-  if (need_energy) {
+  if (Simulator::need_energy) {
     energy_terms = Simulator::get_energy();
     // total energy
     if (observables.energy()) {

@@ -98,6 +98,10 @@ int Lattice::construct(const input::Parameters& parms)
   // empty unitcell
   unitcell.clear();
 
+  // impurities
+  impurity_sites_.clear();
+  impurity_bonds_.clear();
+
   define_lattice();
   finalize_lattice();
   //construct_graph();

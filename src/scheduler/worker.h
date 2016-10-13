@@ -18,7 +18,7 @@ class AbstractWorker
 {
 public:
   virtual ~AbstractWorker() {};
-  virtual void start(input::Parameters& p) = 0; // start all runs
+  virtual int start(input::Parameters& p) = 0; // start all runs
   virtual void run(void) = 0; // run for some time (in seconds)
   virtual void finish(void)=0; // mark as finished
   virtual void halt(void) = 0; // halt all runs, simulation is finished        
@@ -31,7 +31,7 @@ public:
   virtual ~Worker();
   
   //virtual void construct(); // needs to be called to finish construction
-  void start(input::Parameters& p) override; // start simulation
+  int start(input::Parameters& p) override; // start simulation
   void run(void) override;// run a few steps and return control
   virtual void dostep(void)=0; // do a step
   // bool started() const { return started_;}

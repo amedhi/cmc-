@@ -3,12 +3,15 @@
 * All rights reserved.
 * Author: Amal Medhi
 *----------------------------------------------------------------------------*/
-#include "mcsimulation.h"
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include "mc_ni2mnx.h"
 
 MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms) 
 {
   // observables as functions of what?
-  observables.as_function_of("T");
+  observables.as_function_of("T^*");
 
   // define your observable operators (other than energy)
   if (need_magn) {
@@ -16,6 +19,31 @@ MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms)
   }
   if (observables.strain() || observables.strain_sq()) {
     Simulator::set_strain_op("sigma(i)");
+  }
+
+  // Mn2 doping
+  double mn2_percent = parms.set_value("Mn2_doping_percent", 0.0);
+  if (mn2_percent<0.0 || mn2_percent>100.0) 
+    throw std::out_of_range("Invalid value of 'Mn2_doping_percent'");
+  // choose the 40% of sites randomly to dope with Mn2 
+  unsigned num_doped_sites = std::nearbyint(0.01 * mn2_percent * num_sites());
+  if (num_doped_sites > 0) {
+    std::vector<unsigned> all_sites(num_sites());
+    for (unsigned i=0; i<all_sites.size(); ++i) all_sites[i] = i;
+    std::shuffle(all_sites.begin(), all_sites.end(), Simulator::rng);
+    // first 'num_doped_sites' of these shuffled sites are doped
+    // bonds connecting to these sites are impurity bonds
+    out_bond_iterator ob, ob_end;
+    in_bond_iterator ib, ib_end;
+    unsigned impurity_btype = Simulator::Model::get_impurity_bondtype();
+    for (unsigned i=0; i<num_doped_sites; ++i) {
+      for (std::tie(ob,ob_end)=out_bonds(all_sites[i]); ob!=ob_end; ++ob) {
+        Simulator::LatticeGraph::change_type_value(ob, impurity_btype);
+      }
+      for (std::tie(ib,ib_end)=in_bonds(all_sites[i]); ib!=ib_end; ++ib) {
+        Simulator::LatticeGraph::change_type_value(ib, impurity_btype);
+      }
+    }
   }
 } 
 
@@ -45,7 +73,10 @@ int MCSimulation::start(input::Parameters& parms)
     }
   }
   // output
-  observables.print(T);
+  int z = 6;
+  double J = parms.set_value("J", 1.0);
+  double T_star = Simulator::kB * Simulator::T/(z*J);
+  observables.print(T_star);
   /*-----------------Simulation END-----------------*/
   return 0;
 }

@@ -1,11 +1,10 @@
 #include <iostream>
-#include "scheduler/scheduler.h"
-#include "montecarlo/simulator.h"
+#include "mc_ni2mnx.h"
 
 int main(int argc, const char *argv[])
 {
   try {
-	 return scheduler::start(argc, argv, scheduler::Task<mc::Simulator>());
+	 return scheduler::start(argc, argv, scheduler::Task<MCSimulation>());
   }
   catch (std::exception& e) {
     std::cout << e.what() << std::endl;

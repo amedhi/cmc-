@@ -12,21 +12,32 @@
 namespace model {
 
 /*--------------------------CouplingConstant--------------------*/
+const int CouplingConstant::global_type = -1;
+
 CouplingConstant::CouplingConstant(const std::string& expr)
 {
   super_type::clear();
-  super_type::insert({0, expr});
-  num_types_ = 1;
+  // expr is applicable for all site & bond types
+  super_type::insert({global_type, expr});
+  num_types_ = -1;
   valid_ = true;
 }
 
 CouplingConstant& CouplingConstant::operator=(const std::string expr)
 {
   super_type::clear();
-  super_type::insert({0, expr});
-  num_types_ = 1;
+  // expr is applicable for all site & bond types
+  super_type::insert({global_type, expr});
+  num_types_ = -1; 
   valid_ = true;
   return *this;
+}
+
+CouplingConstant::CouplingConstant(const value_type& type0, const value_type& type1, 
+    const value_type& type2, const value_type& type3, const value_type& type4, 
+    const value_type& type5)
+{
+  create(type0, type1, type2, type3, type4, type5); 
 }
 
 void CouplingConstant::clear(void)
@@ -70,13 +81,13 @@ void CouplingConstant::create(const value_type& type0, const value_type& type1,
 void CouplingConstant::add_type(const unsigned& type, const std::string& expr)
 {
   super_type::insert({type, expr});
-  valid_ = (num_types_==size());
+  valid_ = (num_types_==static_cast<int>(size()));
 }
 
 void CouplingConstant::add_type(const value_type& val)
 {
   super_type::insert(val);
-  valid_ = (num_types_==size());
+  valid_ = (num_types_==static_cast<int>(size()));
 }
 
 
@@ -185,10 +196,23 @@ SiteTerm::SiteTerm(const std::string& name, const CouplingConstant& cc,
   name_ = name;
   size_ = size;
 
-  for (const auto& p : cc) {
-    std::string term_name = name + std::to_string(p.first);
-    this->operator[](p.first) = SiteOperatorTerm(term_name,p.second,op_expr,site);
-    //insert({p.first, SiteOperatorTerm(term_name,p.second,op_expr,site)});
+  // if the 'cc' is implicitly defined for all site types 
+  if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
+    std::string cc_expr = cc.begin()->second;
+    for (unsigned i=0; i<size_; ++i) {
+      std::string term_name = name + std::to_string(i);
+      this->operator[](i) = SiteOperatorTerm(term_name,cc_expr,op_expr,site);
+    }
+  } 
+  else {
+    // set "SiteOperatorTerm"-s only for those site types for which 'cc' is 
+    // explicitly defined
+    for (const auto& p : cc) {
+      std::string term_name = name + std::to_string(p.first);
+      std::string cc_expr = p.second;
+      this->operator[](p.first) = SiteOperatorTerm(term_name,cc_expr,op_expr,site);
+      //insert({p.first, SiteOperatorTerm(term_name,p.second,op_expr,site)});
+    }
   }
 }
 
@@ -318,15 +342,31 @@ BondTerm::BondTerm(const std::string& name, const CouplingConstant& cc,
   if (!cc.valid()) throw std::invalid_argument("BondTerm:: Invalid CouplingConstant");
   name_ = name;
   size_ = size;
-  for (const auto& p : cc) {
-    std::string term_name = name + std::to_string(p.first);
-    this->operator[](p.first) = BondOperatorTerm(term_name,p.second,op_expr,src,tgt);
-    //insert({p.first, BondOperatorTerm(term_name,p.second,op_expr,src,tgt)});
+
+  // if the 'cc' is implicitly defined for all bond types 
+  if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
+    std::string cc_expr = cc.begin()->second;
+    for (unsigned i=0; i<size_; ++i) {
+      std::string term_name = name + std::to_string(i);
+      this->operator[](i) = BondOperatorTerm(term_name,cc_expr,op_expr,src,tgt);
+    }
+  } 
+  else {
+    // set "BondOperatorTerm"-s only for those bond types for which 'cc' is 
+    // defined explicitly
+    for (const auto& p : cc) {
+      std::string term_name = name + std::to_string(p.first);
+      std::string cc_expr = p.second;
+      this->operator[](p.first) = BondOperatorTerm(term_name,cc_expr,op_expr,src,tgt);
+      //insert({p.first, BondOperatorTerm(term_name,p.second,op_expr,src,tgt)});
+    }
   }
 }
 
 void BondTerm::build_matrix(const BasisDescriptor& basis, const BondSiteMap& bondtypes)
 {
+  // build matrix for all the bond types in the lattice 
+  // (for types with undefined 'cc' matrices are zero)
   unsigned src_type, tgt_type;
   for (unsigned i=0; i<size_; ++i) {
     std::tie(src_type, tgt_type) = bondtypes.at(i);
