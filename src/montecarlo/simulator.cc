@@ -166,8 +166,9 @@ inline double Simulator::get_potts_magnetization(void)
   // spin values for a sites
   for (unsigned i=0; i<num_sitetypes; ++i) {
     for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
-      SiteBasisState state(i, j, sitebasis_dimension(i)-1); 
-      int spin = std::nearbyint(magn_op.apply(state));
+      SiteBasisState site_state(i, j, sitebasis_dimension(i)-1); 
+      int spin = std::nearbyint(magn_op.apply(site_state));
+      //std::cout << "i, spin = " << i << ", " << spin << "\n";
       site_spins[i].insert(spin);
     }
   }
@@ -185,10 +186,14 @@ inline double Simulator::get_potts_magnetization(void)
     int Nmax = 0;
     for (const auto& s : site_spins[i]) {
       int count = lattice_spins[i].count(s);
+      //std::cout << "s, count = " << s << ", " << count << "\n";
       if (Nmax < count) Nmax = count;
     }
+    //std::cout << "Nmax, Nmag = " << Nmax << ", " << lattice_spins[i].size() << "\n";
     ms += static_cast<double>(q*Nmax - lattice_spins[i].size())/(q-1);
   }
+  //std::cout << "M = " << ms/num_sites() << "\n";
+  //abort();
   return ms/num_sites();
 }
 

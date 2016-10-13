@@ -227,7 +227,7 @@ public:
 private:
   struct Extent {unsigned size; boundary_type bc; boundary_type periodicity;};
   enum Dimension {dim1, dim2, dim3};
-  lattice_id lid {lattice_id::UNDEFINED};
+  lattice_id lid {lattice_id::SQUARE};
   std::string lname {""};
   unsigned spatial_dim {0};
 

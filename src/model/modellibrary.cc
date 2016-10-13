@@ -30,6 +30,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
   boost::to_upper(model_name);
 
   if (model_name == "ISING") {
+    mid = model_id::ISING;
     // site basis
     site_basis.clear();
     site_basis.add_qn(qn="S", min=-1, max=1, step=2);
@@ -41,7 +42,31 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
     add_bondterm(name="Exchange", cc="-J", op="S(i)*S(j)", src="i", tgt="j");
   }
 
+  else if (model_name == "POTTS") {
+    mid = model_id::POTTS;
+
+    // q-value of the model
+    int q = inputs.set_value("q", 2);
+    if (q < 2) throw std::range_error("modellibrary: POTTS model 'q' must be >= 2");
+    add_constant("q", q);
+
+    // site basis
+    site_basis.clear();
+    site_basis.add_qn(qn="S", min=0, max=(q-1), step=1);
+    site_basis.add_operator(op="S", matrixelem="S", qn="S");
+    add_sitebasis(site_basis);
+    // model parameters
+    add_parameter(name="J", defval=1.0, inputs);
+    add_parameter(name="H", defval=0.0, inputs);
+    // site operator term
+    // magnetic field along +z direction 
+    add_siteterm("H_field", cc="-H", op="cron(S(i),0)", site="i");
+    // bond operator terms
+    add_bondterm(name="Exchange", cc="-J", op="cron(S(i),S(j))", src="i", tgt="j");
+  }
+
   else if (model_name == "BEG_POTTS_NI2MNX") {
+    mid = model_id::BEG_POTTS;
     switch (lattice.id()) {
       /*------------- 'SQUARE' lattice--------------*/
       case lattice::lattice_id::SIMPLECUBIC:
@@ -86,27 +111,16 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
   }
 
   else if (model_name == "BEG") {
-    switch (lattice.id()) {
-      /*------------- 'SQUARE' lattice--------------*/
-      case lattice::lattice_id::SQUARE:
-        //site_basis
-        site_basis.clear();
-        site_basis.add_qn(qn="Sz", min=-2, max=2, step=2);
-        site_basis.add_qn(qn="El", min=-1, max=1, step=1);
-        site_basis.add_operator(name="Sz", matrixelem="Sz", qn="Sz", change=0);
-        site_basis.add_operator(name="sigma", matrixelem="El", qn="El", change=0);
-        add_sitebasis(site_basis, sitetype=0);
-        // model parameters
-        add_parameter(name="J", defval=1.0, inputs);
-        add_parameter(name="B", defval=0.0, inputs);
-        // site operator term
-        add_siteterm("MagField", cc="B", op="2*Sz(i)*sigma(i)", site="i");
-        // bond operator term
-        add_bondterm("Exchange", cc="-J", op="Sz(i)*Sz(j)", src="i", tgt="j");
-        break;
-      default:
-        throw std::range_error("*error: modellibrary: model not defined for the given lattice");
-    }
+    mid = model_id::BEG;
+    //site_basis
+    site_basis.clear();
+    site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+    site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+    add_sitebasis(site_basis);
+    // model parameters
+    add_parameter(name="K", defval=1.0, inputs);
+    // bond operator term
+    add_bondterm("Elastic", cc="-K", op="sigma(i)*sigma(j)", src="i", tgt="j");
   }
 
   /*------------- undefined lattice--------------*/

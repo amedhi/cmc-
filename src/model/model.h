@@ -22,6 +22,10 @@
 
 namespace model {
 
+enum class model_id {
+  UNDEFINED, ISING, POTTS, BEG, BEG_POTTS
+};
+
 class Model : public std::vector<SiteTerm>,  public std::vector<BondTerm>
 {
 public:
@@ -73,6 +77,8 @@ public:
   //const SiteTerm& siteterm(const unsigned& i) const { return siteterms_[i]; };
   //const BondTerm& bondterm(const unsigned& i) const { return bondterms_[i]; };
 private:
+  model_id mid {model_id::ISING};
+
   int define_model(const input::Parameters& inputs, const lattice::Lattice& lattice);
   void finalize(const lattice::Lattice& lattice);
   void set_info_string(const lattice::Lattice& lattice); 
