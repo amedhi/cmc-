@@ -3,7 +3,7 @@
 # Building the cmc++ lib
 #-------------------------------------------------------------
 # 1. Set compiler option
-CMC_CXX=clang++ -std=c++11 # Clang compiler 
+CMC_CXX=clang++ -m64 -std=c++11 # Clang compiler 
 #CMC_CXX=g++ -m64 -std=c++11 # GNU GCC compiler
 
 ifndef CMC_CXX
