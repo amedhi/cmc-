@@ -5,7 +5,7 @@
 a.out
 
 # ignore other input files
-input.*
+#input.*
 
 # except for one
 !input.parm
