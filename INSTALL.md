@@ -1,18 +1,18 @@
 About
 -------
 The code provides the 'cmc++' library and sample classical Monte Carlo
-applications using the library.  
+applications developed using the library.  
 
 
 Version
 -------
-cmc++ 1.0.0 - Sep 2016.
+cmc++ 1.0.0 - Oct 2016.
 
 Build
 ------------
 To build the library, edit the options.mk file in the root directory to
-set your compiler options. Then do 'make' in the root directory. If successful,
-it build the static library 'libcmc++.a' and installs it in the 'lib' directory
+set your compilation options. Then do 'make' in the root directory. If successful,
+it builds the static library 'libcmc++.a' and installs it in the 'lib' directory
 and the header files in the 'include' directory under the root directory. 
 There are two dependencies - Boost and Eigen C++. You will need latest C++ 
 compilers as the code contains many C++11 features.  It it tested with 
