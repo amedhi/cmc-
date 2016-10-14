@@ -99,6 +99,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
 
         // site operator term
         // magnetic field along +z direction (S=+2) 
+        /*
         add_siteterm("H_field", cc="-g*muB*H/J", op="cron(S(i),2)", site="i");
         add_siteterm("sigma", cc="-ln_p*kB*T/J", op="1-sigma(i)*sigma(i)", site="i");
 
@@ -108,6 +109,17 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_bondterm("Tetra", cc="-1.0", op="sigma(i)*sigma(j)", src="i", tgt="j");
         add_bondterm("Cubic", cc="-K/J", op="(1-sigma(i)*sigma(i))*(1-sigma(j)*sigma(j))", src="i", tgt="j");
         add_bondterm("Interaction", cc="0.5*U/J", 
+          op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
+        */
+        add_siteterm("H_field", cc="-g*muB*H", op="cron(S(i),2)", site="i");
+        add_siteterm("sigma", cc="-kB*T*ln_p", op="1.0-sigma(i)*sigma(i)", site="i");
+
+        // bond operator term
+        cc = CouplingConstant({0, "-J_fm"}, {1, "-J_afm*min(1.0,(T/T_afm-1.0))"});
+        add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
+        add_bondterm("Tetra", cc="-J", op="sigma(i)*sigma(j)", src="i", tgt="j");
+        add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
+        add_bondterm("Interaction", cc="0.5*U", 
           op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
         break;
       default:

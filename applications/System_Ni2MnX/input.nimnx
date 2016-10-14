@@ -13,9 +13,9 @@ print_level = -2 #-2
 # Lattice:
 #---------------------------------------------
 lattice = "SIMPLE CUBIC" 
-lsize1 = 8
-lsize2 = 8
-lsize3 = 8
+lsize1 = 10
+lsize2 = 10
+lsize3 = 10
 bc1 = "periodic"
 bc2 = "periodic"
 bc3 = "periodic"
@@ -24,24 +24,24 @@ bc3 = "periodic"
 # Model:
 #---------------------------------------------
 model = "BEG_POTTS_NI2MNX"
-Mn2_doping_percent = 0 #40
+Mn2_doping_percent = 40
 #---------------------------------------------
 # Parameters:
 #---------------------------------------------
 kB = 0.086173325 # meV/K
-J = 1.35
+J = 3.0 #1.35
 J_fm = 3.10
 J_afm = 3.24
-U = -0.135
-K = -0.135
+U = -0.135 #-0.135
+K = -1.0   #-0.135
 H = 0.01
-T_afm = 177.6 # 1.89
+T_afm = 22.0 #177.6 # 1.89
 #---------------------------------------------
 # Temperature:
 #---------------------------------------------
 #T = 25.0, 25.0, 400.0
 #T = 1.0
-T = 1.0, 1.0, 40.0
+T = 10, 2.5, 60.0
 
 
 #---------------------------------------------
@@ -57,7 +57,7 @@ Strain = "YES"
 rng_seed = 1  # (=0 No seed, >0 time_seed)
 measure_samples = 10000
 warmup = 10000
-min_interval = 5
+min_interval = 10
 max_interval = 20
 
 

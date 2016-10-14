@@ -11,7 +11,7 @@
 MCSimulation::MCSimulation(input::Parameters& parms) : Simulator(parms) 
 {
   // observables as functions of what?
-  observables.as_function_of("T^*");
+  observables.as_function_of("kB*T");
 
   // define your observable operators (other than energy)
   if (need_magn) {
@@ -73,10 +73,14 @@ int MCSimulation::start(input::Parameters& parms)
     }
   }
   // output
-  int z = 6;
+  /*int z = 6;
   double J = parms.set_value("J", 1.0);
   double T_star = Simulator::kB * Simulator::T/(z*J);
   observables.print(T_star);
+  */
+  //std::cout << "T = " << T << "\n";
+  double kB_T = Simulator::kB * Simulator::T;
+  observables.print(kB_T);
   /*-----------------Simulation END-----------------*/
   return 0;
 }

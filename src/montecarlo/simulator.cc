@@ -206,6 +206,7 @@ inline double Simulator::get_strain(void)
     ms += strain_op.apply(s);
   }
   return std::abs(ms)/num_sites();
+  //return ms/num_sites();
 }
 
 
