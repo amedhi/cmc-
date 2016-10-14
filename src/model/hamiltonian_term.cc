@@ -23,6 +23,14 @@ CouplingConstant::CouplingConstant(const std::string& expr)
   valid_ = true;
 }
 
+std::pair<CouplingConstant::iterator, bool> CouplingConstant::insert(const value_type& val) 
+{
+  std::pair<iterator, bool> res = super_type::insert(val);
+  num_types_ = super_type::size();
+  valid_ = true;
+  return res;
+}
+
 CouplingConstant& CouplingConstant::operator=(const std::string expr)
 {
   super_type::clear();
@@ -305,6 +313,13 @@ int BondOperator::build_matrix(const SiteBasis& source_basis, const SiteBasis& t
   return 0;
 }
 
+//-----------------------BondOperatorTerm-------------------------
+BondOperatorTerm::BondOperatorTerm(const std::string& name, const std::string& cc_expr, 
+  const std::string& op_expr, const std::string& source, const std::string& target)
+  : BondOperator(op_expr, source, target), name_{name}, cc_expr_{cc_expr}, cc_value_{0.0}
+{
+}
+
 int BondOperatorTerm::eval_coupling_constant(const ModelParams& cvals, const ModelParams& pvals)
 {
   if (cc_expr_.size()==0) {
@@ -318,6 +333,7 @@ int BondOperatorTerm::eval_coupling_constant(const ModelParams& cvals, const Mod
   for (const auto& p : pvals) vars[p.first] = p.second;
   try { 
     cc_value_ = expr.evaluate(cc_expr_, vars); 
+    //std::cout << "bterm: " << name_ << " = " << cc_value_ << "\n";
   }
   catch (std::exception& e) 
   { 
@@ -327,12 +343,6 @@ int BondOperatorTerm::eval_coupling_constant(const ModelParams& cvals, const Mod
   return 0;
 }
 
-//-----------------------BondOperatorTerm-------------------------
-BondOperatorTerm::BondOperatorTerm(const std::string& name, const std::string& cc_expr, 
-  const std::string& op_expr, const std::string& source, const std::string& target)
-  : BondOperator(op_expr, source, target), name_{name}, cc_expr_{cc_expr}, cc_value_{0.0}
-{
-}
 
 //-----------------------BondTerm-------------------------
 BondTerm::BondTerm(const std::string& name, const CouplingConstant& cc, 

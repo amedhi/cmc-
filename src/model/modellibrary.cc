@@ -6,6 +6,7 @@
 * Last Modified by:   Amal Medhi, amedhi@macbook
 * Last Modified time: 2016-03-17 23:51:58
 *----------------------------------------------------------------------------*/
+#include <cmath>
 #include "model.h"
 #include <boost/algorithm/string.hpp>
 
@@ -85,25 +86,29 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_parameter(name="J_fm", defval=1.0, inputs);
         add_parameter(name="J_afm", defval=1.0, inputs);
         add_parameter(name="H", defval=0.0, inputs);
-        add_parameter(name="U", defval=0.0, inputs);
-        add_parameter(name="K", defval=0.0, inputs);
+        add_parameter(name="U", defval=1.0, inputs);
+        add_parameter(name="K", defval=1.0, inputs);
         add_parameter(name="T_afm", defval=1.0, inputs);
+        // constants
+        add_constant("g", 2.0);
+        add_constant("muB", 0.057884);  // meV/Tesla
+        add_constant("ln_p", std::log(2.0));  // ln(p)
 
         // this model has terms for impurity 'bond' 
         def_impurity_bondtype(type=1, src_type=0, tgt_type=0);
 
         // site operator term
         // magnetic field along +z direction (S=+2) 
-        add_siteterm("H_field", cc="-H/J", op="cron(S(i),2)", site="i");
-        add_siteterm("sigma", cc="-0.693147*kB*T/J", op="1-sigma(i)*sigma(i)", site="i");
+        add_siteterm("H_field", cc="-g*muB*H/J", op="cron(S(i),2)", site="i");
+        add_siteterm("sigma", cc="-ln_p*kB*T/J", op="1-sigma(i)*sigma(i)", site="i");
 
         // bond operator term
         cc = CouplingConstant({0, "-J_fm/J"}, {1, "-J_afm/J*min(1.0,(T/T_afm-1.0))"});
         add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
         add_bondterm("Tetra", cc="-1.0", op="sigma(i)*sigma(j)", src="i", tgt="j");
         add_bondterm("Cubic", cc="-K/J", op="(1-sigma(i)*sigma(i))*(1-sigma(j)*sigma(j))", src="i", tgt="j");
-        add_bondterm("Interaction", cc="U/J", 
-          op="cron(S(i),S(j))*((1-sigma(i)*sigma(i))*(1-sigma(j)*sigma(j))-0.5)", src="i", tgt="j");
+        add_bondterm("Interaction", cc="0.5*U/J", 
+          op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
         break;
       default:
         throw std::range_error("*error: modellibrary: model not defined for the given lattice");

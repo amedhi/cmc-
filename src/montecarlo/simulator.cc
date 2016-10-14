@@ -172,6 +172,7 @@ inline double Simulator::get_potts_magnetization(void)
       site_spins[i].insert(spin);
     }
   }
+  //for (const auto& s : site_spins[0]) std::cout << s << "\n";
 
   // set of spin values for all the sites in the lattice
   for (const auto& s : state) {
@@ -225,9 +226,10 @@ void Simulator::update_state_metropolis(void)
   for (unsigned i=0; i<num_sites(); ++i) {
     // suggest new state and random site
     unsigned site = rng.random_site();
+    unsigned site_type = state[site].type();
     unsigned curr_idx = state[site].idx();
     unsigned new_idx = curr_idx;
-    while (new_idx==curr_idx) new_idx = rng.random_idx(state[site].type());
+    while (new_idx==curr_idx) new_idx = rng.random_idx(site_type);
 
     double w_old = 1.0;
     double w_new = 1.0;
@@ -253,14 +255,14 @@ void Simulator::init_boltzmann_table(void)
 {
   for (auto& mat : boltzmann_table) mat = Eigen::MatrixXd();
   // get bond types
-  unsigned btype, src_type, tgt_type;
   //for (unsigned i=0; i<lattice().num_unitcell_bonds(); ++i) {
   //  lattice::Bond b = lattice().unitcell_bond(i);
   //  lattice::Site src = lattice().unitcell_site(b.src_id());
   //  lattice::Site tgt = lattice().unitcell_site(b.tgt_id());
-  for (const auto& m : Model::bond_sites_map()) {
-    btype = m.first;
-    std::tie(src_type, tgt_type) = m.second;
+  unsigned btype, src_type, tgt_type;
+  for (const auto& elem : Model::bond_sites_map()) {
+    btype = elem.first;
+    std::tie(src_type, tgt_type) = elem.second;
     unsigned src_dim = sitebasis_dimension(src_type);
     unsigned tgt_dim = sitebasis_dimension(tgt_type);
     Eigen::MatrixXd exp_betaE(src_dim, tgt_dim);

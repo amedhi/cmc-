@@ -25,7 +25,7 @@ public:
   using super_type = std::unordered_map<int, std::string>;
   using iterator = super_type::iterator;
   using const_iterator = super_type::const_iterator;
-  using value_type = std::pair<unsigned,std::string>;
+  using value_type = super_type::value_type;
 
   CouplingConstant() {}
   CouplingConstant(const std::string& expr); 
@@ -34,6 +34,7 @@ public:
     const value_type& type4={0,"_null_"}, const value_type& type5={0,"_null_"});
   ~CouplingConstant() {}
   CouplingConstant& operator=(const std::string expr); 
+  std::pair<iterator, bool> insert(const value_type& val);
   void create(const unsigned& num_type);
   void create(const value_type& type0, const value_type& type1={0,"_null_"}, 
     const value_type& type2={0,"_null_"}, const value_type& type3={0,"_null_"}, 

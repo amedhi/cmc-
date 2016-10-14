@@ -87,7 +87,7 @@ unsigned Model::add_bondterm(const std::string& name, const CouplingConstant& cc
   if (cc.size()==1 && cc.begin()->first==CouplingConstant::global_type) {
     // the 'cc' is implicitly defined for all types
     std::string cc_expr = cc.begin()->second;
-    for (const auto& m : sitetypes_map_) {
+    for (const auto& m : bondtypes_map_) {
       cc_remapped.insert({m.second, cc_expr});
     }
   }
