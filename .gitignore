@@ -1,6 +1,9 @@
 # no .o and .a files
 *.[oa]
 
+# the option.mk file included in Makefile
+options.mk
+
 # no a.out
 a.out
 

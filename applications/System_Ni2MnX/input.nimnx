@@ -13,9 +13,9 @@ print_level = -2 #-2
 # Lattice:
 #---------------------------------------------
 lattice = "SIMPLE CUBIC" 
-lsize1 = 10
-lsize2 = 10
-lsize3 = 10
+lsize1 = 15
+lsize2 = 15
+lsize3 = 15
 bc1 = "periodic"
 bc2 = "periodic"
 bc3 = "periodic"
@@ -29,13 +29,13 @@ Mn2_doping_percent = 40
 # Parameters:
 #---------------------------------------------
 kB = 0.086173325 # meV/K
-J = 3.0 #1.35
+J = 3.0 # 1.35 # 3.0 
 J_fm = 3.10
 J_afm = 3.24
 U = -0.135 #-0.135
-K = -1.0   #-0.135
+K = -1.0 # -0.135 #-0.135
 H = 0.01
-T_afm = 22.0 #177.6 # 1.89
+T_afm = 22.6 #177.6 # 1.89
 #---------------------------------------------
 # Temperature:
 #---------------------------------------------
@@ -55,8 +55,8 @@ Strain = "YES"
 # Monte Carlo parameters
 #---------------------------------------------
 rng_seed = 1  # (=0 No seed, >0 time_seed)
-measure_samples = 10000
-warmup = 10000
+measure_samples = 50000
+warmup = 50000
 min_interval = 10
 max_interval = 20
 
