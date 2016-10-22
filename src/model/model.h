@@ -37,7 +37,8 @@ public:
   ~Model() {}
   int construct(const input::Parameters& inputs, const lattice::Lattice& lattice);
 
-  unsigned add_sitebasis(SiteBasis& sitebasis, const unsigned& type=0);
+  unsigned add_sitebasis(SiteBasis& sitebasis);
+  unsigned add_sitebasis(const unsigned& type, SiteBasis& sitebasis);
   unsigned add_parameter(const std::string& pname, const double& defval, 
     const input::Parameters& inputs)
     { parms_[pname] = inputs.set_value(pname, defval); return parms_.size(); }

@@ -77,7 +77,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
         site_basis.add_operator(op="S", matrixelem="S", qn="S");
         site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
-        add_sitebasis(site_basis, sitetype=0);
+        add_sitebasis(sitetype=0, site_basis);
 
         // model parameters
         add_parameter(name="T", defval=1.0, inputs);

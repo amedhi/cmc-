@@ -66,11 +66,12 @@ public:
   //using QuantumNumber = QuantumNitumber;
   BasisDescriptor() : name_{""} {}
   ~BasisDescriptor() {}
-  unsigned add_sitebasis(const unsigned& type, SiteBasis& sitebasis)
+  bool add_sitebasis(const unsigned& type, SiteBasis& sitebasis)
   {
     sitebasis.finalize();
-    this->insert(std::make_pair(type, sitebasis));
-    return this->size();
+    auto res = insert(std::make_pair(type, sitebasis));
+    //return this->size();
+    return res.second;
   }
   const unsigned& dimension(const unsigned& site_type) const 
   {

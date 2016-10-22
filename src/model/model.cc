@@ -10,13 +10,30 @@
 
 namespace model {
 
-unsigned Model::add_sitebasis(SiteBasis& sitebasis, const unsigned& type)
+unsigned Model::add_sitebasis(SiteBasis& sitebasis)
 {
+  // it's an error if any 'sitebasis' was already added
+  if (basis_.size()>0) 
+    throw std::logic_error("Model::add_sitebasis: 'sitebasis' already exists, overwrite not allowed.");
+  // the 'sitebasis' is implicitly defined for all site types
+  for (const auto& elem : sitetypes_map_) {
+    unsigned mapped_type = elem.second;
+    basis_.add_sitebasis(mapped_type,sitebasis); 
+  }
+  return basis_.size();
+}
+
+unsigned Model::add_sitebasis(const unsigned& type, SiteBasis& sitebasis)
+{
+  // add 'sitebasis' of the given 'site type'
   auto it=sitetypes_map_.find(type);
   if (it==sitetypes_map_.end()) 
     throw std::range_error("Model::add_sitebasis: specified 'site type' not found");
   unsigned mapped_type = it->second;
-  return basis_.add_sitebasis(mapped_type,sitebasis); 
+  // it's an error if any 'sitebasis' was already added
+  if (!basis_.add_sitebasis(mapped_type,sitebasis)) 
+    throw std::logic_error("Model::add_sitebasis: 'sitebasis' already exists, overwrite not allowed.");
+  return basis_.size();
 }
 
 void Model::def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
@@ -109,6 +126,13 @@ unsigned Model::add_bondterm(const std::string& name, const CouplingConstant& cc
 
 void Model::finalize(const lattice::Lattice& L)
 {
+  // check if 'sitebasis' for all 'site types' are defined
+  for (const auto& elem : sitetypes_map_) {
+    unsigned site_type = elem.second;
+    if (basis_.find(site_type) == basis_.end()) 
+      throw std::range_error("modellibrary:: 'sitebasis' not defined for all 'site type'-s");
+  }
+
   // finalize the site terms
   for (auto it=std::vector<SiteTerm>::begin(); it!=std::vector<SiteTerm>::end(); ++it) {
     it->build_matrix(basis_); 
