@@ -66,10 +66,23 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
     add_bondterm(name="Exchange", cc="-J", op="cron(S(i),S(j))", src="i", tgt="j");
   }
 
+  else if (model_name == "BEG") {
+    mid = model_id::BEG;
+    //site_basis
+    site_basis.clear();
+    site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+    site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+    add_sitebasis(site_basis);
+    // model parameters
+    add_parameter(name="K", defval=1.0, inputs);
+    // bond operator term
+    add_bondterm("Elastic", cc="-K", op="sigma(i)*sigma(j)", src="i", tgt="j");
+  }
+
   else if (model_name == "BEG_POTTS_NI2MNX") {
     mid = model_id::BEG_POTTS;
     switch (lattice.id()) {
-      /*------------- 'SQUARE' lattice--------------*/
+      /*------------- 'SIMPLE CUBIC' lattice--------------*/
       case lattice::lattice_id::SIMPLECUBIC:
         //site_basis
         site_basis.clear();
@@ -122,22 +135,62 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_bondterm("Interaction", cc="0.5*U", 
           op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
         break;
+
+      /*------------- 'NIMNX' lattice--------------*/
+      case lattice::lattice_id::SYS_NIMNX:
+        //site_basis
+        // X-atom sites: only structural degrees of freedom
+        site_basis.clear();
+        site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+        site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+        add_sitebasis(sitetype=0, site_basis);
+        // Ni-atom sites: structural & 3 state spin variables
+        site_basis.clear();
+        site_basis.add_qn(qn="S", min=-1, max=1, step=1);
+        site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+        site_basis.add_operator(op="S", matrixelem="S", qn="S");
+        site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+        add_sitebasis(sitetype=1, site_basis);
+        // Mn-atom sites: structural & 5 state spin variables
+        site_basis.clear();
+        site_basis.add_qn(qn="S", min=-2, max=2, step=1);
+        site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
+        site_basis.add_operator(op="S", matrixelem="S", qn="S");
+        site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
+        add_sitebasis(sitetype=2, site_basis);
+
+        // model parameters
+        add_parameter(name="T", defval=1.0, inputs);
+        add_parameter(name="kB", defval=1.0, inputs);
+        add_parameter(name="J", defval=1.0, inputs);
+        add_parameter(name="J_fm", defval=1.0, inputs);
+        add_parameter(name="J_afm", defval=1.0, inputs);
+        add_parameter(name="H", defval=0.0, inputs);
+        add_parameter(name="U", defval=1.0, inputs);
+        add_parameter(name="K", defval=1.0, inputs);
+        add_parameter(name="K1", defval=1.0, inputs);
+        // constants
+        add_constant("g", 2.0);
+        add_constant("muB", 0.057884);  // meV/Tesla
+        add_constant("ln_p", std::log(2.0));  // ln(p)
+
+        // site operator term
+        add_siteterm("H_field", cc="-g*muB*H", op="cron(S(i),0)", site="i");
+        add_siteterm("sigma", cc="-kB*T*ln_p", op="1.0-sigma(i)*sigma(i)", site="i");
+
+        // bond operator term
+        cc = CouplingConstant({1, "-J_fm"});
+        add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
+        add_bondterm("Tetra", cc="-J", op="sigma(i)*sigma(j)", src="i", tgt="j");
+        add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
+        //add_bondterm("MagElastic", cc="-K1", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
+        add_bondterm("Interaction", cc="0.5*U", 
+          op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
+
+        break;
       default:
         throw std::range_error("*error: modellibrary: model not defined for the given lattice");
     }
-  }
-
-  else if (model_name == "BEG") {
-    mid = model_id::BEG;
-    //site_basis
-    site_basis.clear();
-    site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
-    site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
-    add_sitebasis(site_basis);
-    // model parameters
-    add_parameter(name="K", defval=1.0, inputs);
-    // bond operator term
-    add_bondterm("Elastic", cc="-K", op="sigma(i)*sigma(j)", src="i", tgt="j");
   }
 
   /*------------- undefined lattice--------------*/

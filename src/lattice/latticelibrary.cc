@@ -20,7 +20,7 @@ int Lattice::define_lattice(void)
   using vec = Eigen::Vector3d;
   unsigned type, ngb, src, tgt;
   vec a1, a2, a3, coord;
-  pos src_offset, tgt_offset;
+  pos src_offset, tgt_offset, cell;
 
   /*------------- 'SQUARE' lattice--------------*/
   if (lname == "SQUARE") {
@@ -53,6 +53,48 @@ int Lattice::define_lattice(void)
     unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(1,0,0));
     unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,1,0));
     unitcell.add_bond(type=0, ngb=1, src=0, src_offset=pos(0,0,0), tgt=0, tgt_offset=pos(0,0,1));
+  }
+
+  else if (lname == "SYS_NIMNX") {
+    // type
+    lid = lattice_id::SYS_NIMNX;
+
+    // basis vectors
+    unitcell.set_basis(a1=vec(1,0,0), a2=vec(0,1,0), a3=vec(0,0,1));
+
+    // add sites
+    // In-atom
+    unsigned In, Mn, Ni1, Ni2;
+    In  = unitcell.add_site(type=0, coord=vec(0,0,0));
+    // Ni1-atom
+    Ni1 = unitcell.add_site(type=1, coord=vec(0.25,0.25,0.25));
+    // Mn-atom
+    Mn  = unitcell.add_site(type=2, coord=vec(0.50,0.50,0.50));
+    // Ni2-atom
+    Ni2 = unitcell.add_site(type=1, coord=vec(0.75,0.75,0.75));
+
+    // add bonds
+    // intra-cell bonds
+    unitcell.add_bond(type=0, ngb=1, src=In,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=Mn,  cell=pos(0,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni2, cell=pos(0,0,0));
+    // inter-cell bonds
+    // Ni1--others
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(1,0,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(0,1,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(0,0,1));
+    // Mn--others
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(1,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,1,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,0,1));
+    // Ni2--others
+    unitcell.add_bond(type=1, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(1,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(0,1,0));
+    unitcell.add_bond(type=1, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(0,0,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,1,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,0,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(0,1,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,1,1));
   }
 
   /*------------- 'CHAIN' lattice--------------*/
