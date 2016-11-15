@@ -12,7 +12,7 @@ print_level = -2 #-2
 #---------------------------------------------
 # Lattice:
 #---------------------------------------------
-lattice = "SIMPLE CUBIC" 
+lattice = "SIMPLE_CUBIC" 
 lsize1 = 8
 lsize2 = 8
 lsize3 = 8
