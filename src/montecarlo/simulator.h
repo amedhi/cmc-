@@ -68,7 +68,7 @@ protected:
   void init(void);
   void init_state_random(void);
   void init_boltzmann_table(void);
-  void update_state_metropolis(void);
+  void update_state(void) { update_state_metropolis(); }
   void update_parameters(input::Parameters& parms);
   void set_magn_op(const std::string& op, const std::string& site="i")
    { magn_op.init(basis(), op, site); }
@@ -78,6 +78,9 @@ protected:
   virtual double get_magnetization(void);
   virtual double get_potts_magnetization(void);
   virtual double get_strain(void);
+
+private:
+  void update_state_metropolis(void);
 };
 
 

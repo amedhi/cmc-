@@ -79,7 +79,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
     add_bondterm("Elastic", cc="-K", op="sigma(i)*sigma(j)", src="i", tgt="j");
   }
 
-  else if (model_name == "BEG_POTTS_NI2MNX") {
+  else if (model_name == "BEG_POTTS") {
     mid = model_id::BEG_POTTS;
     switch (lattice.id()) {
       /*------------- 'SIMPLE CUBIC' lattice--------------*/
@@ -144,16 +144,16 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
         site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
         add_sitebasis(sitetype=0, site_basis);
-        // Ni-atom sites: structural & 3 state spin variables
+        // Mn-atom sites: structural & 5 state spin variables
         site_basis.clear();
-        site_basis.add_qn(qn="S", min=-1, max=1, step=1);
+        site_basis.add_qn(qn="S", min=-2, max=2, step=1);
         site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
         site_basis.add_operator(op="S", matrixelem="S", qn="S");
         site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
         add_sitebasis(sitetype=1, site_basis);
-        // Mn-atom sites: structural & 5 state spin variables
+        // Ni-atom sites: structural & 3 state spin variables
         site_basis.clear();
-        site_basis.add_qn(qn="S", min=-2, max=2, step=1);
+        site_basis.add_qn(qn="S", min=-1, max=1, step=1);
         site_basis.add_qn(qn="sigma", min=-1, max=1, step=1);
         site_basis.add_operator(op="S", matrixelem="S", qn="S");
         site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
@@ -175,17 +175,18 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_constant("ln_p", std::log(2.0));  // ln(p)
 
         // site operator term
-        add_siteterm("H_field", cc="-g*muB*H", op="cron(S(i),0)", site="i");
+        cc = CouplingConstant({1, "-g*muB*H"}, {2, "-g*muB*H"});
+        add_siteterm("H_field", cc, op="cron(S(i),0)", site="i");
         add_siteterm("sigma", cc="-kB*T*ln_p", op="1.0-sigma(i)*sigma(i)", site="i");
 
         // bond operator term
-        cc = CouplingConstant({1, "-J_fm"});
+        cc = CouplingConstant({1, "-J_fm"}, {2, "-J_fm"});
         add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
         add_bondterm("Tetra", cc="-J", op="sigma(i)*sigma(j)", src="i", tgt="j");
         add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
-        //add_bondterm("MagElastic", cc="-K1", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
-        add_bondterm("Interaction", cc="0.5*U", 
-          op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
+        add_bondterm("MagElastic", cc="-K1", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
+        //add_bondterm("Interaction", cc="0.5*U", 
+        //  op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
 
         break;
       default:
@@ -216,6 +217,7 @@ int Model::construct(const input::Parameters& inputs, const lattice::Lattice& la
     lattice::Site src = lattice.unitcell_site(b.src_id());
     lattice::Site tgt = lattice.unitcell_site(b.tgt_id());
     bond_sites_map_.insert({b.type(), std::make_pair(src.type(), tgt.type())});
+    //std::cout << "bond_site_map = "<<b.type()<<" "<<src.type()<<" "<<tgt.type()<<"\n";
   }
   impurity_bond_types_.clear();
 

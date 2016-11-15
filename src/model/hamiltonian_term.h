@@ -16,6 +16,7 @@
 #include "sitebasis.h"
 #include "modelparams.h"
 #include "../lattice/lattice.h"
+#include "../expression/expression.h"
 
 namespace model {
 
@@ -59,6 +60,8 @@ public:
   SiteOperator(const std::string& op_expr, const std::string& site);
   ~SiteOperator() {}
   int build_matrix(const SiteBasis& basis);
+  int build_matrix(const SiteBasis& basis, expr::Expression::variables& vars);
+  //int build_matrix(const SiteBasis& basis, expr::Expression::variables& vars);
   const double& matrix_element(const unsigned& idx) const { return matrix_(idx); }
 private:
   std::string op_expr_;

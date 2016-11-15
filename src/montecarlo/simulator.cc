@@ -235,10 +235,14 @@ void Simulator::update_state_metropolis(void)
     double w_old = 1.0;
     double w_new = 1.0;
     for (std::tie(ob,ob_end)=out_bonds(site); ob!=ob_end; ++ob) {
+      //std::cout << boltzmann_table[bond_type(ob)].cols() << "\n";
+      //std::cout << curr_idx << state[target(ob)].idx() << "\n";
       w_old *= boltzmann_table[bond_type(ob)](curr_idx, state[target(ob)].idx());
       w_new *= boltzmann_table[bond_type(ob)](new_idx, state[target(ob)].idx());
     }
     for (std::tie(ib,ib_end)=in_bonds(site); ib!=ib_end; ++ib) {
+      //std::cout << bond_type(ib) << " " << state[source(ib)].idx() << " " << curr_idx << "\n";
+      //std::cout << boltzmann_table[bond_type(ib)].rows() << "\n";
       w_old *= boltzmann_table[bond_type(ib)](state[source(ib)].idx(), curr_idx);
       w_new *= boltzmann_table[bond_type(ib)](state[source(ib)].idx(), new_idx);
     }

@@ -13,9 +13,9 @@ print_level = -2 #-2
 # Lattice:
 #---------------------------------------------
 lattice = "SIMPLE CUBIC" 
-lsize1 = 15
-lsize2 = 15
-lsize3 = 15
+lsize1 = 8
+lsize2 = 8
+lsize3 = 8
 bc1 = "periodic"
 bc2 = "periodic"
 bc3 = "periodic"
@@ -23,7 +23,7 @@ bc3 = "periodic"
 #---------------------------------------------
 # Model:
 #---------------------------------------------
-model = "BEG_POTTS_NI2MNX"
+model = "BEG_POTTS"
 Mn2_doping_percent = 40
 #---------------------------------------------
 # Parameters:
@@ -55,8 +55,8 @@ Strain = "YES"
 # Monte Carlo parameters
 #---------------------------------------------
 rng_seed = 1  # (=0 No seed, >0 time_seed)
-measure_samples = 50000
-warmup = 50000
+measure_samples = 5000
+warmup = 5000
 min_interval = 10
 max_interval = 20
 

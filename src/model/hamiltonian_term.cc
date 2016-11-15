@@ -6,7 +6,6 @@
 * Last Modified by:   Amal Medhi, amedhi@macbook
 * Last Modified time: 2016-03-16 16:47:10
 *----------------------------------------------------------------------------*/
-#include "../expression/expression.h"
 #include "hamiltonian_term.h"
 
 namespace model {
@@ -115,6 +114,7 @@ SiteOperator::SiteOperator(const std::string& op_expr, const std::string& site)
 int SiteOperator::build_matrix(const SiteBasis& site_basis)
 {
   matrix_.resize(site_basis.dimension());
+  //std::cout << "expression = " << op_expr_ << std::endl;
   if (op_expr_.size()==0) {
     // this operator does not operate on this site
     for (unsigned i=0; i<site_basis.dimension(); ++i) matrix_(i) = 0.0;
@@ -133,6 +133,43 @@ int SiteOperator::build_matrix(const SiteBasis& site_basis)
   // expression evaluator
   expr::Expression op_expr; 
   expr::Expression::variables vars;
+
+  unsigned num_operator = site_basis.num_operator();
+  for (unsigned i=0; i<site_basis.dimension(); ++i) {
+    for (unsigned n=0; n<num_operator; ++n) {
+      QuantumOperator op = site_basis.quantum_operator(n);
+      std::string vname = op.name()+site_;
+      vars[vname] = static_cast<double>(site_basis.apply(op.id(), i));
+      //expr.set_variable(op.name(), m);
+    }
+    matrix_(i) = op_expr.evaluate(expr_str, vars);
+    //std::cout << "state, val =" << i << ", " << static_cast<int>(res) << std::endl;
+  }
+  return 0;
+}
+
+// when default variable values are set
+int SiteOperator::build_matrix(const SiteBasis& site_basis, expr::Expression::variables& vars)
+{
+  matrix_.resize(site_basis.dimension());
+  //std::cout << "expression = " << op_expr_ << std::endl;
+  if (op_expr_.size()==0) {
+    // this operator does not operate on this site
+    for (unsigned i=0; i<site_basis.dimension(); ++i) matrix_(i) = 0.0;
+    return 0;
+  }
+
+  // oprator expression: strip '(' & ')' characters around 'site'
+  std::string expr_str(op_expr_);
+  std::string s = "("+site_+")";
+  std::string::size_type pos;
+  while ((pos=expr_str.find(s)) != std::string::npos) expr_str.replace(pos,s.length(),site_);
+  //while ((pos=expr_str.find('(')) != std::string::npos) expr_str.erase(pos,1);
+  //while ((pos=expr_str.find(')')) != std::string::npos) expr_str.erase(pos,1);
+  //std::cout << "expression = " << expr_str << std::endl;
+
+  // expression evaluator
+  expr::Expression op_expr; 
 
   unsigned num_operator = site_basis.num_operator();
   for (unsigned i=0; i<site_basis.dimension(); ++i) {
@@ -218,6 +255,7 @@ SiteTerm::SiteTerm(const std::string& name, const CouplingConstant& cc,
     for (const auto& p : cc) {
       std::string term_name = name + std::to_string(p.first);
       std::string cc_expr = p.second;
+      //std::cout << p.first << " " << p.second << "\n";
       this->operator[](p.first) = SiteOperatorTerm(term_name,cc_expr,op_expr,site);
       //insert({p.first, SiteOperatorTerm(term_name,p.second,op_expr,site)});
     }
@@ -271,6 +309,7 @@ int BondOperator::build_matrix(const SiteBasis& source_basis, const SiteBasis& t
 
   unsigned M = source_basis.dimension();
   unsigned N = target_basis.dimension();
+  //std::cout <<"M= "<<M<<" N= "<<N<<"\n"; 
   matrix_.resize(M,N);
   if (op_expr_.size()==0) {
     // this operator does not operate on this bond
@@ -302,7 +341,7 @@ int BondOperator::build_matrix(const SiteBasis& source_basis, const SiteBasis& t
       vars[vname] = static_cast<double>(source_basis.apply(op.id(), i));
     }
     for (unsigned j=0; j<N; ++j) {
-      for (unsigned n=0; n<source_basis.num_operator(); ++n) {
+      for (unsigned n=0; n<target_basis.num_operator(); ++n) {
         QuantumOperator op = target_basis.quantum_operator(n);
         std::string vname = op.name()+target_;
         vars[vname] = static_cast<double>(target_basis.apply(op.id(), j));
@@ -380,6 +419,7 @@ void BondTerm::build_matrix(const BasisDescriptor& basis, const BondSiteMap& bon
   unsigned src_type, tgt_type;
   for (unsigned i=0; i<size_; ++i) {
     std::tie(src_type, tgt_type) = bondtypes.at(i);
+    //std::cout << size_ <<" "<<i<<" "<<src_type<<" "<<tgt_type<<"\n"; 
     this->operator[](i).build_matrix(basis.site_basis(src_type), basis.site_basis(tgt_type));
   }
   /*for (auto& elem : *this) {
@@ -397,6 +437,7 @@ void BondTerm::build_matrix(const BasisDescriptor& basis, const BondSiteMap& bon
 void BondTerm::eval_coupling_constant(const ModelParams& cvals, const ModelParams& pvals)
 {
   for (auto& term : *this) term.eval_coupling_constant(cvals, pvals);
+  //std::cout << "------hi--------\n"; //abort();
   /*for (auto& elem : *this) {
     elem.second.eval_coupling_constant(pvals);
   }*/

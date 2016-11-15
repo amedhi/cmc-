@@ -31,12 +31,12 @@ int MCSimulation::start(input::Parameters& parms)
   // initial state
   Simulator::init_state_random();
   // warmup runs
-  for (int i=0; i<warmup; ++i) Simulator::update_state_metropolis();
+  for (int i=0; i<warmup; ++i) Simulator::update_state();
   // measurement
   int count = 0;
   int num_measurement = 0;
   while (num_measurement != measure_samples) {
-    Simulator::update_state_metropolis();
+    Simulator::update_state();
     if (count++ == min_interval) {
       // make measurements
       count = 0;

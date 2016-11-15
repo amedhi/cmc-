@@ -85,6 +85,7 @@ unsigned Model::add_siteterm(const std::string& name, const CouplingConstant& cc
       auto it2=sitetypes_map_.find(sitetype);
       if (it2!=sitetypes_map_.end()) {
         unsigned mapped_type = it2->second;
+        //std::cout << mapped_type << it->second << "\n";
         cc_remapped.insert({mapped_type, it->second});
       }
       else throw std::range_error("Model::add_siteterm: non-existent 'site type' specified");
@@ -105,6 +106,7 @@ unsigned Model::add_bondterm(const std::string& name, const CouplingConstant& cc
     // the 'cc' is implicitly defined for all types
     std::string cc_expr = cc.begin()->second;
     for (const auto& m : bondtypes_map_) {
+      //std::cout << "m= " << m.second << " cc_expr = " << cc_expr << "\n";
       cc_remapped.insert({m.second, cc_expr});
     }
   }
@@ -157,6 +159,7 @@ void Model::finalize(const lattice::Lattice& L)
   has_bondterm_ = (std::vector<BondTerm>::size()>0);
   bt_begin_ = std::vector<BondTerm>::cbegin();
   bt_end_ = std::vector<BondTerm>::cend();
+
 
   set_info_string(L);
 }
