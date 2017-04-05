@@ -4,7 +4,7 @@
 * Author: amedhi
 * Date:   2016-03-01 00:11:01
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2016-03-17 23:52:15
+* Last Modified time: 2017-04-03 17:54:55
 *----------------------------------------------------------------------------*/
 #include "graph.h"
 
@@ -91,7 +91,7 @@ void LatticeGraph::construct_graph(void)
     source = boost::vertex(bonds[i].src_id(), *this);
     target = boost::vertex(bonds[i].tgt_id(), *this);
     boost::tie(e, flag) = add_edge(source, target, *this);
-    //std::cout << e << "\n";
+    //std::cout << e << "\n"; getchar();
     // edge properties
     this->operator[](e).type = bonds[i].type();
     this->operator[](e).stype = bonds[i].type();

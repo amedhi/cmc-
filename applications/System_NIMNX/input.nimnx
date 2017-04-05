@@ -28,12 +28,12 @@ model = "BEG_POTTS"
 # Parameters:
 #---------------------------------------------
 kB = 0.086173325 # meV/K
-J = 3.0 
-J_fm = 3.10
-J_afm = 3.24
-U = -0.135 
-K = -1.0 
-K1 = -1.0 
+J = 2.0 
+K = 0.25
+Jm_MnNi = 4.64
+Jm_MnMn = -0.02
+U_MnNi = 1.387
+U_MnMn = 4.35
 H = 0.01
 #---------------------------------------------
 # Temperature:
@@ -44,7 +44,7 @@ T = 1.0
 #---------------------------------------------
 # List of observable to calculate:
 #---------------------------------------------
-EnergyTerms = "NO"
+EnergyTerms = "YES"
 PottsMagn = "YES"
 Strain = "YES"
 

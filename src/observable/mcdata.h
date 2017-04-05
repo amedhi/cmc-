@@ -156,7 +156,7 @@ inline const T& DataBin<T>::square_root(element_type& val) const
 template<>
 inline const VectorData& DataBin<VectorData>::square_root(VectorData& val) const
 {
-  val.sqrt();
+  val = val.sqrt();
   return val;
 }
 

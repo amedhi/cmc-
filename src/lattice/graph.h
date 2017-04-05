@@ -93,6 +93,8 @@ public:
   const unsigned& site_uid(const site_descriptor& v) const { return this->operator[](v).uid; }
   const Vector3d& site_cellcord(const site_iterator& vi) const { return this->operator[](*vi).cell_coord; }
   const Vector3d& site_cellcord(const site_descriptor& v) const { return this->operator[](v).cell_coord; }
+  const Vector3i& site_bravindex(const site_iterator& vi) const { return this->operator[](*vi).bravindex; }
+  const Vector3i& site_bravindex(const site_descriptor& v) const { return this->operator[](v).bravindex; }
 
   /*
   vertex_descriptor vertex(const unsigned& i) const { return boost::vertex(i, *this); }

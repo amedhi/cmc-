@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2016-01-17 21:32:15
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2016-03-18 00:46:47
+* Last Modified time: 2017-04-04 16:22:13
 *----------------------------------------------------------------------------*/
 #include <stdexcept>
 #include <iomanip>
@@ -20,7 +20,7 @@ int Lattice::define_lattice(void)
   using vec = Eigen::Vector3d;
   unsigned type, ngb, src, tgt;
   vec a1, a2, a3, coord;
-  pos src_offset, tgt_offset, cell;
+  pos src_offset, tgt_offset;
 
   /*------------- 'SQUARE' lattice--------------*/
   if (lname == "SQUARE") {
@@ -75,26 +75,82 @@ int Lattice::define_lattice(void)
 
     // add bonds
     // intra-cell bonds
-    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(0,0,0));
-    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,0,0));
-    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni2, cell=pos(0,0,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, pos(0,0,0), tgt=In,  pos(0,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  pos(0,0,0), tgt=Ni1, pos(0,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  pos(0,0,0), tgt=Ni2, pos(0,0,0));
     // inter-cell bonds
     // Mn--others
-    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(1,0,0));
-    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,1,0));
-    unitcell.add_bond(type=1, ngb=1, src=Mn,  cell=pos(0,0,0), tgt=Ni1, cell=pos(0,0,1));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  pos(0,0,0), tgt=Ni1, pos(1,0,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  pos(0,0,0), tgt=Ni1, pos(0,1,0));
+    unitcell.add_bond(type=1, ngb=1, src=Mn,  pos(0,0,0), tgt=Ni1, pos(0,0,1));
     // Ni1--others
-    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(1,0,0));
-    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(0,1,0));
-    unitcell.add_bond(type=0, ngb=1, src=Ni1, cell=pos(0,0,0), tgt=In,  cell=pos(0,0,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, pos(0,0,0), tgt=In,  pos(1,0,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, pos(0,0,0), tgt=In,  pos(0,1,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni1, pos(0,0,0), tgt=In,  pos(0,0,1));
     // Ni2--others
-    unitcell.add_bond(type=2, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(1,0,0));
-    unitcell.add_bond(type=2, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(0,1,0));
-    unitcell.add_bond(type=2, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=Mn,  cell=pos(0,0,1));
-    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,1,0));
-    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,0,1));
-    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(0,1,1));
-    unitcell.add_bond(type=0, ngb=1, src=Ni2, cell=pos(0,0,0), tgt=In,  cell=pos(1,1,1));
+    unitcell.add_bond(type=2, ngb=1, src=Ni2, pos(0,0,0), tgt=Mn,  pos(1,0,0));
+    unitcell.add_bond(type=2, ngb=1, src=Ni2, pos(0,0,0), tgt=Mn,  pos(0,1,0));
+    unitcell.add_bond(type=2, ngb=1, src=Ni2, pos(0,0,0), tgt=Mn,  pos(0,0,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, pos(0,0,0), tgt=In,  pos(1,1,0));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, pos(0,0,0), tgt=In,  pos(1,0,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, pos(0,0,0), tgt=In,  pos(0,1,1));
+    unitcell.add_bond(type=0, ngb=1, src=Ni2, pos(0,0,0), tgt=In,  pos(1,1,1));
+
+    //2nd neighbour inter-cell bonds
+    /*
+    // In is 'non-magnetic' and elastic interaction is only for NN bonds
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(0,0,1));
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(0,1,0));
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(0,1,1));
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(1,0,0));
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(1,0,1));
+    unitcell.add_bond(type=3, ngb=2, src=Mn,  cell=pos(0,0,0), tgt=In,  cell=pos(1,1,0));
+    */
+
+    /*
+    // No Ni1-Ni2 interaction (no elastic also because it is 2nd NN)
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(0,0,1));
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(0,1,0));
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(0,1,1));
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(1,0,0));
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(1,0,1));
+    unitcell.add_bond(type=3, ngb=2, src=Ni2, cell=pos(0,0,0), tgt=Ni1,  cell=pos(1,1,0));
+    */
+
+    //3rd neighbour inter-cell bonds
+    /*
+    // In is 'non-magnetic' and elastic interaction is only for NN bonds
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(0,0,1));
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(0,1,0));
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(1,0,0));
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(1,-1,0));
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(0,1,-1));
+    unitcell.add_bond(type=5, ngb=3, src=In, pos(0,0,0), tgt=In,  pos(-1,0,1));
+    */
+    
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(0,0,1));
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(0,1,0));
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(1,0,0));
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(1,-1,0));
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(0,1,-1));
+    unitcell.add_bond(type=3, ngb=3, src=Mn, pos(0,0,0), tgt=Mn,  pos(-1,0,1));
+
+    /*
+    // No Ni1-Ni1 interaction (no elastic also because it is 2nd NN)
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(0,0,1));
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(0,1,0));
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(1,0,0));
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(1,-1,0));
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(0,1,-1));
+    unitcell.add_bond(type=6, ngb=3, src=Ni1, pos(0,0,0), tgt=Ni1,  pos(-1,0,1));
+
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(0,0,1));
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(0,1,0));
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(1,0,0));  
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(1,-1,0));  
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(0,1,-1));  
+    unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(-1,0,1));  
+    */
   }
 
   /*------------- 'CHAIN' lattice--------------*/

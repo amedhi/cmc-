@@ -19,8 +19,8 @@ namespace mc {
 
 class SiteObsOperator : public std::vector<model::SiteOperator> 
 {
-  using op_sitetypes = std::set<unsigned>;
 public:
+  using op_sitetypes = std::set<unsigned>;
   SiteObsOperator() {}
   SiteObsOperator(const model::BasisDescriptor& basis, const std::string& op_expr, 
     const std::string& site="i");

@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2016-03-16 16:47:10
+* Last Modified time: 2017-04-03 18:26:08
 *----------------------------------------------------------------------------*/
 #include "model.h"
 
@@ -171,6 +171,7 @@ void Model::update_parameters(const input::Parameters& inputs)
   // update the model term couping constants
   for (auto it=std::vector<SiteTerm>::begin(); it!=std::vector<SiteTerm>::end(); ++it) {
     it->eval_coupling_constant(constants_, parms_); 
+    //std::cout << it->coupling(0) << "\n"; getchar();
   }
   for (auto it=std::vector<BondTerm>::begin(); it!=std::vector<BondTerm>::end(); ++it) {
     it->eval_coupling_constant(constants_, parms_); 

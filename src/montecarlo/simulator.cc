@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2016-03-16 16:47:10
+* Last Modified time: 2017-04-03 18:28:22
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include "simulator.h"
@@ -42,6 +42,9 @@ Simulator::Simulator(input::Parameters& parms)
   measure_samples = parms.set_value("measure_samples", 0);
   warmup = parms.set_value("warmup", 0);
   min_interval = parms.set_value("min_interval", 0);
+
+  // Boltzmann constant
+  kB = parms.set_value("kB", 1.0);
 
   // observables
   observables.init(parms, *this, print_copyright);
@@ -105,11 +108,12 @@ void Simulator::update_parameters(input::Parameters& parms) {
 
   // set variable parameters
   T = parms.set_value("T", 1.0);
-  kB = parms.set_value("kB", 1.0);
   beta = 1.0/(kB*T);
 
   // values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
   init_boltzmann_table();
+
+  std::cout << "Simulator:: hack in calculating Potts magnetization\n";
 }
 
 /*----------------------Energy-----------------------*/
@@ -127,11 +131,16 @@ inline mc::VectorData Simulator::get_energy(void) const
     state_idx tgt_idx = state[site(tgt)].idx();
     unsigned term = 0;
     for (auto bterm=bondterms_begin(); bterm!=bondterms_end(); ++bterm) {
+      //std::cout << src << " - " << tgt << "\n";
+      //std::cout << strain_op.apply(state[src]) << " - ";
+      //std::cout << strain_op.apply(state[tgt]) << "\n";
       double m = bterm->matrix_element(type, src_idx, tgt_idx);
       double c = bterm->coupling(type);
       //std::cout << "bond: " << " " << m << std::endl;
       energy[term++] += m * c;
+      //std::cout << "energy " << m*c << "\n";
     }
+    //getchar();
   }
   // site energies
   for (const auto& s : state) {
@@ -164,7 +173,9 @@ inline double Simulator::get_potts_magnetization(void)
   std::vector<std::set<int> > site_spins(num_sitetypes);
 
   // spin values for a sites
-  for (unsigned i=0; i<num_sitetypes; ++i) {
+  // HACK
+  //for (unsigned i=0; i<num_sitetypes; ++i) {
+  for (unsigned i=1; i<num_sitetypes; ++i) {
     for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
       SiteBasisState site_state(i, j, sitebasis_dimension(i)-1); 
       int spin = std::nearbyint(magn_op.apply(site_state));
@@ -182,7 +193,9 @@ inline double Simulator::get_potts_magnetization(void)
 
   // magnetization
   double ms = 0;
-  for (unsigned i=0; i<num_sitetypes; ++i) {
+  // HACK
+  //for (unsigned i=0; i<num_sitetypes; ++i) {
+  for (unsigned i=1; i<num_sitetypes; ++i) {
     int q = site_spins[i].size();
     int Nmax = 0;
     for (const auto& s : site_spins[i]) {
@@ -204,6 +217,7 @@ inline double Simulator::get_strain(void)
   double ms = 0;
   for (const auto& s : state) {
     ms += strain_op.apply(s);
+    //std::cout << "strain = " << strain_op.apply(s); getchar();
   }
   return std::abs(ms)/num_sites();
   //return ms/num_sites();
@@ -234,19 +248,25 @@ void Simulator::update_state_metropolis(void)
 
     double w_old = 1.0;
     double w_new = 1.0;
+    //std::cout << "site, sigma = " << site << " " << strain_op.apply(state[site]) << "\n";
     for (std::tie(ob,ob_end)=out_bonds(site); ob!=ob_end; ++ob) {
       //std::cout << boltzmann_table[bond_type(ob)].cols() << "\n";
       //std::cout << curr_idx << state[target(ob)].idx() << "\n";
+      //std::cout << "sigma = " << strain_op.apply(state[target(ob)]) << "\n";
       w_old *= boltzmann_table[bond_type(ob)](curr_idx, state[target(ob)].idx());
       w_new *= boltzmann_table[bond_type(ob)](new_idx, state[target(ob)].idx());
     }
     for (std::tie(ib,ib_end)=in_bonds(site); ib!=ib_end; ++ib) {
       //std::cout << bond_type(ib) << " " << state[source(ib)].idx() << " " << curr_idx << "\n";
       //std::cout << boltzmann_table[bond_type(ib)].rows() << "\n";
+      //std::cout << "sigma = " << strain_op.apply(state[source(ib)]) << "\n";
       w_old *= boltzmann_table[bond_type(ib)](state[source(ib)].idx(), curr_idx);
       w_new *= boltzmann_table[bond_type(ib)](state[source(ib)].idx(), new_idx);
     }
     double proby = w_new/w_old;
+    //std::cout << "site = " << site << "\n";
+    //std::cout << "proby = " << proby << "\n";
+    //getchar();
 
     // acceptance
     if (proby > rng.random_real()) {
