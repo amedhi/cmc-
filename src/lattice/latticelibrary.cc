@@ -3,7 +3,7 @@
 * All rights reserved.
 * Date:   2016-01-17 21:32:15
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-04 16:22:13
+* Last Modified time: 2017-04-08 00:27:29
 *----------------------------------------------------------------------------*/
 #include <stdexcept>
 #include <iomanip>
@@ -151,6 +151,11 @@ int Lattice::define_lattice(void)
     unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(0,1,-1));  
     unitcell.add_bond(type=6, ngb=3, src=Ni2, pos(0,0,0), tgt=Ni2,  pos(-1,0,1));  
     */
+
+    //6th neighbour Mn-Mn bonds (c/a=1.0)
+    unitcell.add_bond(type=4, ngb=6, src=Mn, pos(0,0,0), tgt=Mn,  pos(1,1,-1));
+    unitcell.add_bond(type=4, ngb=6, src=Mn, pos(0,0,0), tgt=Mn,  pos(1,-1,1));
+    unitcell.add_bond(type=4, ngb=6, src=Mn, pos(0,0,0), tgt=Mn,  pos(-1,1,1));
   }
 
   /*------------- 'CHAIN' lattice--------------*/

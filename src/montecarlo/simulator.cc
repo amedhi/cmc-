@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-03 18:28:22
+* Last Modified time: 2017-04-09 08:04:05
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include "simulator.h"
@@ -62,6 +62,19 @@ Simulator::Simulator(input::Parameters& parms)
   if (observables.magn() || observables.magn_sq() || 
     observables.potts_magn() || observables.potts_magn_sq()) {
     need_magn = true;
+  }
+}
+
+// in case the initial 'graph' has changed
+void Simulator::reset_system_state(void) 
+{
+  for (auto s=sites_begin(); s!=sites_end(); ++s) {
+    unsigned stype = site_type(s);
+    state_idx max_idx = sitebasis_dimension(stype)-1;
+    if (max_idx < 1) {
+      throw std::range_error("Simulator::reset_system_state: site basis dimension must be >= 2");
+    }
+    state[site(s)] = SiteState(stype, 0, max_idx);
   }
 }
 

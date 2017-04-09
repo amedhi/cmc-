@@ -66,6 +66,7 @@ protected:
   bool need_magn{false};
 
   void init(void);
+  void reset_system_state(void); 
   void init_state_random(void);
   void init_boltzmann_table(void);
   void update_state(void) { update_state_metropolis(); }

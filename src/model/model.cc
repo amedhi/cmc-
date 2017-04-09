@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-03 18:26:08
+* Last Modified time: 2017-04-08 23:50:19
 *----------------------------------------------------------------------------*/
 #include "model.h"
 
@@ -36,6 +36,7 @@ unsigned Model::add_sitebasis(const unsigned& type, SiteBasis& sitebasis)
   return basis_.size();
 }
 
+/*
 void Model::def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
   const unsigned& tgt_type)
 {
@@ -51,20 +52,49 @@ void Model::def_impurity_bondtype(const unsigned& btype, const unsigned& src_typ
     throw std::range_error("Model::add_impurity_bond: 'tgt type' does not exist");
   else mapped_tgt_type = sitetypes_map_.at(tgt_type);
   // add the new bond type & its mapped value
-  impurity_bond_types_.push_back(btype);
+  //impurity_bond_types_.push_back(btype);
   mapped_btype = bondtypes_map_.size();
   bondtypes_map_.insert({btype, mapped_btype});
   // add to bond type-target types map
   bond_sites_map_.insert({mapped_btype, 
     std::make_pair(mapped_src_type, mapped_tgt_type)});
+}*/
+
+void Model::add_impurity_bond(const unsigned& id, const unsigned& btype, const unsigned& src_type, 
+    const unsigned& tgt_type)
+{
+  unsigned mapped_btype, mapped_src_type, mapped_tgt_type;
+  // 'id' of impurity bondtype must be unique
+  if (impurity_bond_types_.find(id) != impurity_bond_types_.end()) 
+    throw std::range_error("Model::add_impurity_bond: bond 'id' already exist");
+  // if the bondtype already exist
+  if (bondtypes_map_.find(btype) != bondtypes_map_.end()) {
+    impurity_bond_types_.insert({id, btype});
+    return;
+  }
+  // if the sitetypes is not defined yet
+  if (sitetypes_map_.find(src_type) == sitetypes_map_.end()) 
+    throw std::range_error("Model::add_impurity_bond: 'src type' does not exist");
+  else mapped_src_type = sitetypes_map_.at(src_type);
+  if (sitetypes_map_.find(tgt_type) == sitetypes_map_.end()) 
+    throw std::range_error("Model::add_impurity_bond: 'tgt type' does not exist");
+  else mapped_tgt_type = sitetypes_map_.at(tgt_type);
+  // 'btype' is new, hence add its mapped type value
+  mapped_btype = bondtypes_map_.size();
+  bondtypes_map_.insert({btype, mapped_btype});
+  impurity_bond_types_.insert({id, mapped_btype});
+  // add to bond type-target types map
+  bond_sites_map_.insert({mapped_btype, std::make_pair(mapped_src_type, mapped_tgt_type)});
 }
 
+/*
 int Model::get_impurity_bondtype(void) const
 {
   if (impurity_bond_types_.size()==1) return bondtypes_map_.at(impurity_bond_types_[0]);
   // at present assume only one type of impurity bond 
   return -1;
 }
+*/
 
 unsigned Model::add_siteterm(const std::string& name, const CouplingConstant& cc,
   const std::string& op_expr, const std::string& site)

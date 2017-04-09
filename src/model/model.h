@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:46
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2016-03-16 16:47:10
+* Last Modified time: 2017-04-09 00:37:38
 *----------------------------------------------------------------------------*/
 #ifndef MODEL_H
 #define MODEL_H
@@ -49,9 +49,13 @@ public:
     const std::string& op_expr, const std::string& site);
   unsigned add_bondterm(const std::string& name, const CouplingConstant& cc,
     const std::string& op_expr, const std::string& src, const std::string& tgt);
-  void def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
+  //void def_impurity_bondtype(const unsigned& btype, const unsigned& src_type, 
+  //  const unsigned& tgt_type); 
+  void add_impurity_bond(const unsigned& id, const unsigned& btype, const unsigned& src_type, 
     const unsigned& tgt_type); 
-  int get_impurity_bondtype(void) const;
+  const unsigned& impurity_btype(const unsigned& id) const { return impurity_bond_types_.at(id); }
+  const unsigned& get_site_type(const unsigned& user_type) const { return sitetypes_map_.at(user_type); }
+  const unsigned& get_bond_type(const unsigned& user_type) const { return bondtypes_map_.at(user_type); }
 
   const BasisDescriptor& basis(void) const { return basis_; }
   const SiteBasis& site_basis(const unsigned& site_type) const { return basis_.at(site_type); }
@@ -89,7 +93,8 @@ private:
   std::map<unsigned, unsigned> sitetypes_map_;
   std::map<unsigned, unsigned> bondtypes_map_;
   BondTerm::BondSiteMap bond_sites_map_;  
-  std::vector<unsigned> impurity_bond_types_;
+  // impurity
+  std::map<unsigned,unsigned> impurity_bond_types_; //id-type map
 
   bool has_siteterm_{false};
   bool has_bondterm_{false};

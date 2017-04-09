@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-11 13:02:35
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-04 16:38:23
+* Last Modified time: 2017-04-09 01:45:56
 *----------------------------------------------------------------------------*/
 #include <cmath>
 #include "model.h"
@@ -18,6 +18,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
   //unsigned ntypes;
   //std::vector<MatrixElement> matrix_elem(20);
   double defval;
+  unsigned id;
   unsigned sitetype, change, type, src_type, tgt_type;
   std::string name, matrixelem, op, qn, site, src, tgt, fact;
   SiteBasis site_basis;
@@ -111,7 +112,8 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_constant("ln_p", std::log(2.0));  // ln(p)
 
         // this model has terms for impurity 'bond' 
-        def_impurity_bondtype(type=1, src_type=0, tgt_type=0);
+        add_impurity_bond(id=0, type=1, src_type=0, tgt_type=0);
+        //def_impurity_bondtype(type=1, src_type=0, tgt_type=0);
 
         // site operator term
         // magnetic field along +z direction (S=+2) 
@@ -164,8 +166,17 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         site_basis.add_operator(op="sigma", matrixelem="sigma", qn="sigma");
         add_sitebasis(sitetype=2, site_basis);
 
-        // this model has terms for impurity 'bond' 
-        //def_impurity_bondtype(type=1, src_type=0, tgt_type=0);
+        // declare the impurity bond types 
+        // replace 'type-1 & type-2' bonds
+        add_impurity_bond(id=0, type=5, src_type=2, tgt_type=2);
+        // replace 'type-3' bonds (with impurity site as source)
+        add_impurity_bond(id=1, type=6, src_type=2, tgt_type=1);
+        // replace 'type-3' bonds (with impurity site as target)
+        add_impurity_bond(id=2, type=7, src_type=1, tgt_type=2);
+        // replace 'type-4' bonds (with impurity site as source)
+        add_impurity_bond(id=3, type=8, src_type=2, tgt_type=1);
+        // replace 'type-4' bonds (with impurity site as target)
+        add_impurity_bond(id=4, type=9, src_type=1, tgt_type=2);
 
         // model parameters
         add_parameter(name="T", defval=1.0, inputs);
@@ -173,9 +184,13 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_parameter(name="J", defval=1.0, inputs);
         add_parameter(name="K", defval=1.0, inputs);
         add_parameter(name="Jm_MnNi", defval=1.0, inputs);
-        add_parameter(name="Jm_MnMn", defval=1.0, inputs);
+        add_parameter(name="Jm_MnMn3", defval=1.0, inputs);
+        add_parameter(name="Jm_MnMn4", defval=1.0, inputs);
+        add_parameter(name="Jm_MnNiB", defval=1.0, inputs);
         add_parameter(name="U_MnNi", defval=1.0, inputs);
-        add_parameter(name="U_MnMn", defval=1.0, inputs);
+        add_parameter(name="U_MnMn3", defval=1.0, inputs);
+        add_parameter(name="U_MnMn4", defval=1.0, inputs);
+        add_parameter(name="U_MnNiB", defval=1.0, inputs);
         add_parameter(name="H", defval=0.0, inputs);
         // constants
         add_constant("g", 2.0);
@@ -189,16 +204,31 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
 
         // bond operator term
         // magnetic exchange
-        cc = CouplingConstant({1,"-Jm_MnNi"}, {2,"-Jm_MnNi"}, {3,"-Jm_MnMn"});
+        //cc = CouplingConstant({1,"-Jm_MnNi"}, {2,"-Jm_MnNi"}, {3,"-Jm_MnMn"},{4,"-Jm_MnMn4"});
+        cc.create(6);
+        cc.add_type(1, "-Jm_MnNi");
+        cc.add_type(2, "-Jm_MnNi");
+        cc.add_type(3, "-Jm_MnMn3");
+        cc.add_type(4, "-Jm_MnMn4");
+        cc.add_type(6, "-Jm_MnNiB");
+        cc.add_type(7, "-Jm_MnNiB");
         add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
+
         // elastic J
-        cc = CouplingConstant({0,"-J"}, {1,"-J"}, {2,"-J"});
+        cc = CouplingConstant({0,"-J"}, {1,"-J"}, {2,"-J"}, {5,"-J"});
         add_bondterm("Tetra", cc="-J", op="sigma(i)*sigma(j)", src="i", tgt="j");
         // elastic K
-        cc = CouplingConstant({0,"-K"}, {1,"-K"}, {2,"-K"});
+        cc = CouplingConstant({0,"-K"}, {1,"-K"}, {2,"-K"}, {5,"-K"});
         add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
         // interaction
-        cc = CouplingConstant({1, "-U_MnNi"}, {2, "-U_MnNi"}, {3, "-U_MnMn"});
+        //cc = CouplingConstant({1,"-U_MnNi"}, {2,"-U_MnNi"}, {3,"-U_MnMn"}, {4,"-U_MnMn4"});
+        cc.create(6);
+        cc.add_type(1, "-U_MnNi");
+        cc.add_type(2, "-U_MnNi");
+        cc.add_type(3, "-U_MnMn3");
+        cc.add_type(4, "-U_MnMn4");
+        cc.add_type(6, "-U_MnNiB");
+        cc.add_type(7, "-U_MnNiB");
         add_bondterm("Interaction", cc, 
           op="cron(S(i),S(j))*sigma(i)*sigma(j)", src="i", tgt="j");
         //add_bondterm("MagElastic", cc="-K1", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
@@ -235,6 +265,7 @@ int Model::construct(const input::Parameters& inputs, const lattice::Lattice& la
     bond_sites_map_.insert({b.type(), std::make_pair(src.type(), tgt.type())});
     //std::cout << "bond_site_map = "<<b.type()<<" "<<src.type()<<" "<<tgt.type()<<"\n";
   }
+  // impurity 
   impurity_bond_types_.clear();
 
   define_model(inputs, lattice);
