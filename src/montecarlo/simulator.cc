@@ -4,10 +4,12 @@
 * Author: Amal Medhi
 * Date:   2016-03-09 15:27:50
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-09 08:04:05
+* Last Modified time: 2017-06-03 11:08:14
 *----------------------------------------------------------------------------*/
 #include <iomanip>
 #include "simulator.h"
+
+#define POTTS_MAGN_HACK
 
 namespace mc {
 
@@ -126,7 +128,9 @@ void Simulator::update_parameters(input::Parameters& parms) {
   // values of exp(-beta*E) for bond energy (E) for Metropolis algorithm
   init_boltzmann_table();
 
+#ifdef POTTS_MAGN_HACK
   std::cout << "Simulator:: hack in calculating Potts magnetization\n";
+#endif
 }
 
 /*----------------------Energy-----------------------*/
@@ -186,8 +190,8 @@ inline double Simulator::get_potts_magnetization(void)
   std::vector<std::set<int> > site_spins(num_sitetypes);
 
   // spin values for a sites
+#ifdef POTTS_MAGN_HACK
   // HACK
-  //for (unsigned i=0; i<num_sitetypes; ++i) {
   for (unsigned i=1; i<num_sitetypes; ++i) {
     for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
       SiteBasisState site_state(i, j, sitebasis_dimension(i)-1); 
@@ -196,6 +200,16 @@ inline double Simulator::get_potts_magnetization(void)
       site_spins[i].insert(spin);
     }
   }
+#else
+  for (unsigned i=0; i<num_sitetypes; ++i) {
+    for (unsigned j=0; j<sitebasis_dimension(i); ++j) {
+      SiteBasisState site_state(i, j, sitebasis_dimension(i)-1); 
+      int spin = std::nearbyint(magn_op.apply(site_state));
+      //std::cout << "i, spin = " << i << ", " << spin << "\n";
+      site_spins[i].insert(spin);
+    }
+  }
+#endif
   //for (const auto& s : site_spins[0]) std::cout << s << "\n";
 
   // set of spin values for all the sites in the lattice
@@ -206,8 +220,9 @@ inline double Simulator::get_potts_magnetization(void)
 
   // magnetization
   double ms = 0;
+
+#ifdef POTTS_MAGN_HACK
   // HACK
-  //for (unsigned i=0; i<num_sitetypes; ++i) {
   for (unsigned i=1; i<num_sitetypes; ++i) {
     int q = site_spins[i].size();
     int Nmax = 0;
@@ -219,7 +234,20 @@ inline double Simulator::get_potts_magnetization(void)
     //std::cout << "Nmax, Nmag = " << Nmax << ", " << lattice_spins[i].size() << "\n";
     ms += static_cast<double>(q*Nmax - lattice_spins[i].size())/(q-1);
   }
-  //std::cout << "M = " << ms/num_sites() << "\n";
+#else
+  for (unsigned i=0; i<num_sitetypes; ++i) {
+    int q = site_spins[i].size();
+    int Nmax = 0;
+    for (const auto& s : site_spins[i]) {
+      int count = lattice_spins[i].count(s);
+      //std::cout << "s, count = " << s << ", " << count << "\n";
+      if (Nmax < count) Nmax = count;
+    }
+    //std::cout << "Nmax, Nmag = " << Nmax << ", " << lattice_spins[i].size() << "\n";
+    ms += static_cast<double>(q*Nmax - lattice_spins[i].size())/(q-1);
+  }
+#endif
+
   //abort();
   return ms/num_sites();
 }
@@ -313,7 +341,7 @@ void Simulator::init_boltzmann_table(void)
         E_src += m * sterm->coupling(src_type);
       }
       for (unsigned j=0; j<tgt_dim; ++j) {
-        // siteterm for src site
+        // siteterm for tgt site
         double E_tgt = 0.0;
         for (auto sterm=siteterms_begin(); sterm!=siteterms_end(); ++sterm) {
           double m = sterm->matrix_element(tgt_type, j);

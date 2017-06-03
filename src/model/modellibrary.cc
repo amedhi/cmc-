@@ -4,7 +4,7 @@
 * Author: Amal Medhi
 * Date:   2016-03-11 13:02:35
 * Last Modified by:   Amal Medhi, amedhi@macbook
-* Last Modified time: 2017-04-09 01:45:56
+* Last Modified time: 2017-05-08 15:57:19
 *----------------------------------------------------------------------------*/
 #include <cmath>
 #include "model.h"
@@ -100,8 +100,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         add_parameter(name="T", defval=1.0, inputs);
         add_parameter(name="kB", defval=1.0, inputs);
         add_parameter(name="J", defval=1.0, inputs);
-        add_parameter(name="J_fm", defval=1.0, inputs);
-        add_parameter(name="J_afm", defval=1.0, inputs);
+        add_parameter(name="Jm", defval=1.0, inputs);
         add_parameter(name="H", defval=0.0, inputs);
         add_parameter(name="U", defval=1.0, inputs);
         add_parameter(name="K", defval=1.0, inputs);
@@ -130,15 +129,15 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
           op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
         */
         add_siteterm("H_field", cc="-g*muB*H", op="cron(S(i),2)", site="i");
-        add_siteterm("sigma", cc="-kB*T*ln_p", op="1.0-sigma(i)*sigma(i)", site="i");
+        //add_siteterm("sigma", cc="-kB*T*ln_p", op="1.0-sigma(i)*sigma(i)", site="i");
 
         // bond operator term
-        cc = CouplingConstant({0, "-J_fm"}, {1, "-J_afm*min(1.0,(T/T_afm-1.0))"});
-        add_bondterm("Potts", cc, op="cron(S(i),S(j))", src="i", tgt="j");
+        //cc = CouplingConstant({0, "-J_fm"}, {1, "-J_afm*min(1.0,(T/T_afm-1.0))"});
+        add_bondterm("Potts", cc="-Jm", op="cron(S(i),S(j))", src="i", tgt="j");
         add_bondterm("Tetra", cc="-J", op="sigma(i)*sigma(j)", src="i", tgt="j");
         add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
-        add_bondterm("Interaction", cc="0.5*U", 
-          op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
+        //add_bondterm("Interaction", cc="0.5*U", 
+        //  op="cron(S(i),S(j))*((1-2*sigma(i)*sigma(i))*(1-2*sigma(j)*sigma(j))-1.0)", src="i", tgt="j");
         break;
 
       /*------------- 'NIMNX' lattice--------------*/
@@ -204,7 +203,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
 
         // bond operator term
         // magnetic exchange
-        //cc = CouplingConstant({1,"-Jm_MnNi"}, {2,"-Jm_MnNi"}, {3,"-Jm_MnMn"},{4,"-Jm_MnMn4"});
+        //cc = CouplingConstant({1,"-Jm_MnNi"}, {2,"-Jm_MnNi"}, {3,"-Jm_MnMn3"},{4,"-Jm_MnMn4"});
         cc.create(6);
         cc.add_type(1, "-Jm_MnNi");
         cc.add_type(2, "-Jm_MnNi");
@@ -221,7 +220,7 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         cc = CouplingConstant({0,"-K"}, {1,"-K"}, {2,"-K"}, {5,"-K"});
         add_bondterm("Cubic", cc="-K", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
         // interaction
-        //cc = CouplingConstant({1,"-U_MnNi"}, {2,"-U_MnNi"}, {3,"-U_MnMn"}, {4,"-U_MnMn4"});
+        //cc = CouplingConstant({1,"-U_MnNi"}, {2,"-U_MnNi"}, {3,"-U_MnMn3"}, {4,"-U_MnMn4"});
         cc.create(6);
         cc.add_type(1, "-U_MnNi");
         cc.add_type(2, "-U_MnNi");
@@ -229,8 +228,8 @@ int Model::define_model(const input::Parameters& inputs, const lattice::Lattice&
         cc.add_type(4, "-U_MnMn4");
         cc.add_type(6, "-U_MnNiB");
         cc.add_type(7, "-U_MnNiB");
-        add_bondterm("Interaction", cc, 
-          op="cron(S(i),S(j))*sigma(i)*sigma(j)", src="i", tgt="j");
+        //add_bondterm("Interaction", cc, 
+        //  op="cron(S(i),S(j))*sigma(i)*sigma(j)", src="i", tgt="j");
         //add_bondterm("MagElastic", cc="-K1", op="(1.0-sigma(i)*sigma(i))*(1.0-sigma(j)*sigma(j))", src="i", tgt="j");
         //add_bondterm("Interaction", cc="-U", 
         //  op="cron(S(i),S(j))*sigma(i)*sigma(i)*sigma(j)*sigma(j)", src="i", tgt="j");
